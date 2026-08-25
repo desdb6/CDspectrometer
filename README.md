@@ -19,6 +19,7 @@
 - 12:00 Fix spectrometer dlls
 - 14:00 Design motor holder
 - 15:30 Print holder motor
+- 17:00 Work on spectral composition simulation
 
 #### Notes
-The provided SDK example for the spectrometer is not working, I had to replace the dll file with the one installed with the SM32pro software. Also the provided code had to be debugged. The dll is 32 bit, so we need to use 32 bit Python, for which Python 3.11.7 is best. We also need to install compatible numpy (1.26.4), kiwisolver (1.4.7) and matplotlib (3.7.5) versions.
+The provided SDK example for the spectrometer is not working, I had to replace the dll file with the one installed with the SM32pro software. Also the provided code had to be debugged. The dll is 32 bit, so we need to use 32 bit Python, for which Python 3.11.7 is best. We also need to install compatible numpy (1.26.4), kiwisolver (1.4.7) and matplotlib (3.7.5) versions. Spectral composition simulation is best done with Mueller calculus/matrices. There is no intensity graph for the light source, so model as a blackbody curve?
