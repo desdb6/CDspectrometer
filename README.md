@@ -38,6 +38,8 @@ Spectral composition simulation is best done with Mueller calculus/matrices. The
 - 12:00 Read spectrometer software manual
 - 13:00 Visit: Laser scattering experiment to determine particle population size via Brownian motion
 - 14:00 Design cuvette holder
+- 16:00 Write code to control spectrometer
+- 17:00 Work on spectral composition simulation
 
 #### Notes
 
