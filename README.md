@@ -46,7 +46,7 @@ Spectral composition simulation is best done with Mueller calculus/matrices. The
 ##### 3D printer holder
 
 I have removed one of the walls as it was not actually supporting the motor.
-
+  
 #### Spectrometer software
 
 It needs a light source pointed directly into the fiber, otherwise it is just random noise and increasing the integration time does nothing.
@@ -62,5 +62,9 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 11:45 Continue spectrometer code example study
 - 12:30 Write my own spectrometer control script
 - 13:30 Assemble cuvette holder
+- 14:45 Design cuvette holder second version
+- 15:00 Print cuvette holder second version
+- 15:15 Improve spectrometer control code
+- 17:00 Assemble setup with new cuvette holder
 
 #### Notes
