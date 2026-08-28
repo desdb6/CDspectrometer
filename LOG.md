@@ -68,3 +68,13 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 17:00 Assemble setup with new cuvette holder
 
 #### Notes
+
+### Friday 28/08/2026
+- 9:00 Design flex collimator holder
+- 10:00 Print flex collimator holder
+- 10:30 Print flex collimator holder second version
+- 11:00 Print flex cuvette holder
+- 11:30 Design flex collimator holder on baseplate
+- 12:00 Visit: Bio 3D printer
+
+#### Notes
