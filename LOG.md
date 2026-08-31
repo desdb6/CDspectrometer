@@ -78,3 +78,19 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 12:00 Visit: Bio 3D printer
 
 #### Notes
+
+### Monday 31/08/2026
+- 9:00 Design stronger cuvette holder
+- 9:30 Print stronger cuvette holder
+- 10:00 Meeting Luis
+- 10:20 Brainstorm calibration ideas
+
+#### Notes
+
+##### Brainstorm what to do until light source arrives
+- Calibration can be done using the Jasco CD: open the shutter and select a wavelength, then put fiber in front of beam and record a spectrum -> fit a cubic polynomial through data points
+- Characterize linear polarizer and find fast axis angle using other linear polarizers
+- Look at beam shape by using a second fiber and shining flash light through it before the motor
+- Design an enclosure for setup in suitable material, Bionanoplasmonics has its own filaments but check with Gerard as well
+- Also for cuvette holder, study what material is best (this part probably needs to be reprinted once we know the beam shape)
+- Do a measurement at the Jasco CD to see how it is done
