@@ -84,6 +84,10 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 9:30 Print stronger cuvette holder
 - 10:00 Meeting Luis
 - 10:20 Brainstorm calibration ideas
+- 11:00 Research printing material
+- 12:00 Visit: CD spectrometer
+- 14:30 Make calibration code
+- 15:00 Get calibration data from CD
 
 #### Notes
 
