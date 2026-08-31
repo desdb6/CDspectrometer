@@ -89,6 +89,8 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 13:30 Look at beam size
 - 14:30 Make calibration code
 - 15:00 Get calibration data from CD
+- 16:00 Research enclosure
+- 17:00 Design enclosure fit test print
 
 #### Notes
 
@@ -119,5 +121,5 @@ https://osf.io/9kt52/overview
 
 https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0059840
 
-##### CCD photoscpectrometer calibration
+##### CCD photospectrometer calibration
 We did this by basically using the Jasco CD as a monochromator, shining 10nm bandwidth light into the CCD fiber and noting the most intense pixel. The converstion from pixels to wavelengths is then done by fitting a cubic polynomial through the datapoints. The results show that the calibration hard coded into the SP python example is very wrong, and most likely not meant to be used for the SM440 photospectrometer; good that we checked this :)
