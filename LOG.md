@@ -86,6 +86,7 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - 10:20 Brainstorm calibration ideas
 - 11:00 Research printing material
 - 12:00 Visit: CD spectrometer
+- 13:30 Look at beam size
 - 14:30 Make calibration code
 - 15:00 Get calibration data from CD
 
@@ -98,3 +99,17 @@ It needs a light source pointed directly into the fiber, otherwise it is just ra
 - Design an enclosure for setup in suitable material, Bionanoplasmonics has its own filaments but check with Gerard as well
 - Also for cuvette holder, study what material is best (this part probably needs to be reprinted once we know the beam shape)
 - Do a measurement at the Jasco CD to see how it is done
+
+##### Optical parts 3D printing
+The 3D prints ideally have to be 100% opaque. Usually, a matte black PLA is opaque enough for optical setups, there is black matte TPLA in the print room. If there is still too much scattering, options include:
+- Using a specialized opaque PLA, but shipping is expensive + takes time
+- Cover parts in candle soot
+- Use black paper to block out light
+- Use paint/spray to finish prints
+- Optimize infill patterns for internal reflections
+
+Useful blog post checking filament opacity: https://www.thingiverse.com/groups/3dp-photo/forums/general/topic:7227#google_vignette
+
+Paper on print material opacity characterization: https://pmc.ncbi.nlm.nih.gov/articles/PMC8208549/
+
+Github for open source optical microscope, simply uses matte black PLA: https://github.com/TadPath/PUMA
