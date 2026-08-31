@@ -14,12 +14,29 @@ from spectrometer_control import Spectrometer
 class ControlPanel(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.spec = Spectrometer()
-        self.motor = K10CR2("55547014")
 
+        try:
+            self.spec = Spectrometer()
+        except Exception as e:
+            print(f"Error connecting spectrometer: {e}")
+
+        try:
+            self.motor = K10CR2("55547014")
+        except Exception as e:
+            print(f"Error connecting motor: {e}") 
 
         self.title("CD Spectrometer Control Panel")
         self.geometry("620x650")
+
+        # Connect devices
+        self.connection_panel = tk.LabelFrame(self, text="Connect Devices")
+        self.connection_panel.pack(padx=10, pady=10, fill="both")
+
+        self.connect_motor_btn = tk.Button(self.connection_panel, text="Connect Motor", command=self.connect_motor)
+        self.connect_motor_btn.grid(row=0, column=0, padx=10, pady=5)
+
+        self.connect_spec_btn = tk.Button(self.connection_panel, text="Connect Spectrometer", command=self.connect_spectrometer)
+        self.connect_spec_btn.grid(row=0, column=1, padx=10, pady=5)
 
         # Motor Control
         self.motor_control_panel = tk.LabelFrame(self, text="K10CR2 Motorized Mount Control")
@@ -77,6 +94,15 @@ class ControlPanel(tk.Tk):
         self.plot_spectrum_btn = tk.Button(self.spectrometer_panel, text="Save Spectrum Plot", command=self.save_plot_spectrum_click)
         self.plot_spectrum_btn.grid(row=3, column=1, padx=5, pady=5)
 
+        self.show_max_btn = tk.Button(self.spectrometer_panel, text="Show maximum value pixel", command=self.show_max_val_pixel)
+        self.show_max_btn.grid(row=3, column=2, padx=5, pady=5)
+
+    def connect_motor(self):
+         self.motor = K10CR2("55547014")
+
+    def connect_spectrometer(self):
+        self.spec = Spectrometer()
+
     def move_motor_click(self):
         try:
             position = float(self.move_position_entry.get())
@@ -103,7 +129,7 @@ class ControlPanel(tk.Tk):
 
     def measure_spectrum_click(self):
         self.spec.measure()
-        self.spec.plot_spectrum()
+        self.spec.plot_spectrum_pixels()
 
     def save_data_spectrum_click(self):
         if not self.filename_entry.get().strip():
@@ -118,6 +144,10 @@ class ControlPanel(tk.Tk):
                     return
         filename = "Outputs/" + self.filename_entry.get().strip()
         self.spec.plot_spectrum(filename, show=False)
+
+    def show_max_val_pixel(self):
+            max_pixel = np.argmax(self.spec.spectrum)
+            tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
 
 if __name__ == "__main__":
     app = ControlPanel()

@@ -156,6 +156,32 @@ class Spectrometer():
         else:
             plt.close()
 
+    def plot_spectrum_pixels(self, filename: str = False, show: bool = True):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(self.spectrum, color="#2563eb", linewidth=1.2)
+
+        ax.set_title(f"Measured spectrum", fontsize=14, fontweight="bold", pad=12)
+        ax.set_xlabel("Pixel", fontsize=11)
+        ax.set_ylabel("Intensity (counts)", fontsize=11)
+
+        ax.set_ybound(lower=0)
+
+        ax.grid(True, linestyle="--", alpha=0.4)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        ax.margins(x=0.01)
+        fig.tight_layout()
+
+        if filename:
+            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
 if __name__ == "__main__":
     spec = Spectrometer()
     spec.set_int_time(3000)
