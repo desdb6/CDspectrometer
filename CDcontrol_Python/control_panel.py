@@ -95,6 +95,7 @@ class ControlPanel(tk.Tk):
         self.plot_spectrum_btn.grid(row=3, column=1, padx=5, pady=5)
 
         self.show_max_btn = tk.Button(self.spectrometer_panel, text="Show maximum value pixel", command=self.show_max_val_pixel)
+<<<<<<< Updated upstream
         self.show_max_btn.grid(row=3, column=2, padx=5, pady=5)
 
     def connect_motor(self):
@@ -102,6 +103,9 @@ class ControlPanel(tk.Tk):
 
     def connect_spectrometer(self):
         self.spec = Spectrometer()
+=======
+        self.show_max_btn.grid(row=3, column=1, padx=5, pady=5)
+>>>>>>> Stashed changes
 
     def move_motor_click(self):
         try:
@@ -146,8 +150,14 @@ class ControlPanel(tk.Tk):
         self.spec.plot_spectrum(filename, show=False)
 
     def show_max_val_pixel(self):
+<<<<<<< Updated upstream
             max_pixel = np.argmax(self.spec.spectrum)
             tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+=======
+        max_intensity = np.max(self.spec.spectrum)
+        max_pixel = np.argmax(self.spec.spectrum)
+        tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+>>>>>>> Stashed changes
 
 if __name__ == "__main__":
     app = ControlPanel()
