@@ -79,7 +79,7 @@ class ControlPanel(tk.Tk):
         self.set_time_avg_btn.grid(row=1, column=2, padx=5, pady=5)
 
         self.measure_spectrum = tk.Button(self.spectrometer_panel, text="Measure Spectrum", command=self.measure_spectrum_click)
-        self.measure_spectrum.grid(row=0, column=3, padx=10, pady=5)
+        self.measure_spectrum.grid(row=3, column=0, padx=10, pady=5)
 
         self.filename_label = tk.Label(self.spectrometer_panel, text="Filename:")
         self.filename_label.grid(row=2, column=0, padx=10, pady=5)
@@ -89,23 +89,13 @@ class ControlPanel(tk.Tk):
         self.filename_entry.insert(0, "spectrum")
 
         self.save_spectrum_btn = tk.Button(self.spectrometer_panel, text="Save Spectrum Data", command=self.save_data_spectrum_click)
-        self.save_spectrum_btn.grid(row=3, column=0, padx=5, pady=5)
+        self.save_spectrum_btn.grid(row=3, column=1, padx=5, pady=5)
 
         self.plot_spectrum_btn = tk.Button(self.spectrometer_panel, text="Save Spectrum Plot", command=self.save_plot_spectrum_click)
-        self.plot_spectrum_btn.grid(row=3, column=1, padx=5, pady=5)
+        self.plot_spectrum_btn.grid(row=3, column=2, padx=5, pady=5)
 
-        self.show_max_btn = tk.Button(self.spectrometer_panel, text="Show maximum value pixel", command=self.show_max_val_pixel)
-<<<<<<< Updated upstream
-        self.show_max_btn.grid(row=3, column=2, padx=5, pady=5)
-
-    def connect_motor(self):
-         self.motor = K10CR2("55547014")
-
-    def connect_spectrometer(self):
-        self.spec = Spectrometer()
-=======
-        self.show_max_btn.grid(row=3, column=1, padx=5, pady=5)
->>>>>>> Stashed changes
+        self.show_max_btn = tk.Button(self.spectrometer_panel, text="Show Maximum Value Pixel", command=self.show_max_val_pixel)
+        self.show_max_btn.grid(row=3, column=3, padx=5, pady=5)
 
     def move_motor_click(self):
         try:
@@ -150,14 +140,8 @@ class ControlPanel(tk.Tk):
         self.spec.plot_spectrum(filename, show=False)
 
     def show_max_val_pixel(self):
-<<<<<<< Updated upstream
             max_pixel = np.argmax(self.spec.spectrum)
             tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
-=======
-        max_intensity = np.max(self.spec.spectrum)
-        max_pixel = np.argmax(self.spec.spectrum)
-        tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
->>>>>>> Stashed changes
 
 if __name__ == "__main__":
     app = ControlPanel()
