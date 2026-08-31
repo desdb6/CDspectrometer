@@ -114,6 +114,9 @@ Paper on print material opacity characterization: https://pmc.ncbi.nlm.nih.gov/a
 
 Github for open source optical microscope, simply uses matte black PLA: https://github.com/TadPath/PUMA
 
+##### Open source optomechanical 3D prints
+https://osf.io/9kt52/overview
+https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0059840
 
 ##### CCD photoscpectrometer calibration
 We did this by basically using the Jasco CD as a monochromator, shining 10nm bandwidth light into the CCD fiber and noting the most intense pixel. The converstion from pixels to wavelengths is then done by fitting a cubic polynomial through the datapoints. The results show that the calibration hard coded into the SP python example is very wrong, and most likely not meant to be used for the SM440 photospectrometer; good that we checked this :)
