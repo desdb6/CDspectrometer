@@ -7,10 +7,17 @@ Last modified: 25/08/2026
 import clr 
 import time 
 
+# 32 BIT
 # Write in file paths of dlls needed. 
 clr.AddReference("C:\\Program Files (x86)\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
 clr.AddReference("C:\\Program Files (x86)\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
 clr.AddReference("C:\\Program Files (x86)\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.IntegratedStepperMotorsCLI.dll")
+
+# # 64 BIT
+# # Write in file paths of dlls needed. 
+# clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.DeviceManagerCLI.dll")
+# clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\Thorlabs.MotionControl.GenericMotorCLI.dll")
+# clr.AddReference("C:\\Program Files\\Thorlabs\\Kinesis\\ThorLabs.MotionControl.IntegratedStepperMotorsCLI.dll")
 
 # Import functions from dlls. 
 from Thorlabs.MotionControl.DeviceManagerCLI import *
