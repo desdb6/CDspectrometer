@@ -123,3 +123,12 @@ https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0059840
 
 ##### CCD photospectrometer calibration
 We did this by basically using the Jasco CD as a monochromator, shining 10nm bandwidth light into the CCD fiber and noting the most intense pixel. The converstion from pixels to wavelengths is then done by fitting a cubic polynomial through the datapoints. The results show that the calibration hard coded into the SP python example is very wrong, and most likely not meant to be used for the SM440 photospectrometer; good that we checked this :)
+
+### Tuesday 01/09/2026
+- 9:00 Figure out time integration units
+- 10:30 Print enclosure outline
+
+#### Notes
+
+##### SP time integration units
+I wrote a script to see what the conversion unit is between the inputted int time number and real time, as I couldnt make sense of it. The documentation said it is 10/3 us/count, but my script (time_int_testing.py) gives something very close to 50 us / count. I have built this into the spectrometer control script.
