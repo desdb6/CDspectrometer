@@ -6,7 +6,10 @@ Last modified: 27/08/2026
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
+from tkinter import messagebox
 
 from motor_control import K10CR2
 from spectrometer_control import Spectrometer
@@ -14,6 +17,16 @@ from spectrometer_control import Spectrometer
 class ControlPanel(tk.Tk):
     def __init__(self):
         super().__init__()
+        self.title("CD Spectrometer Control Panel")
+        self.geometry("1150x420")  # widen the window to fit both columns
+
+        # Left column: holds all existing control panels
+        self.controls_frame = tk.Frame(self)
+        self.controls_frame.pack(side="left", fill="y", padx=5, pady=5)
+
+        # Right column: live view plot
+        self.plot_frame = tk.Frame(self)
+        self.plot_frame.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
         try:
             self.spec = Spectrometer()
@@ -25,11 +38,8 @@ class ControlPanel(tk.Tk):
         except Exception as e:
             print(f"Error connecting motor: {e}") 
 
-        self.title("CD Spectrometer Control Panel")
-        self.geometry("620x650")
-
         # Connect devices
-        self.connection_panel = tk.LabelFrame(self, text="Connect Devices")
+        self.connection_panel = tk.LabelFrame(self.controls_frame, text="Connect Devices")
         self.connection_panel.pack(padx=10, pady=10, fill="both")
 
         self.connect_motor_btn = tk.Button(self.connection_panel, text="Connect Motor", command=self.connect_motor)
@@ -39,7 +49,7 @@ class ControlPanel(tk.Tk):
         self.connect_spec_btn.grid(row=0, column=1, padx=10, pady=5)
 
         # Motor Control
-        self.motor_control_panel = tk.LabelFrame(self, text="K10CR2 Motorized Mount Control")
+        self.motor_control_panel = tk.LabelFrame(self.controls_frame, text="K10CR2 Motorized Mount Control")
         self.motor_control_panel.pack(padx=10, pady=10, fill="both")
 
         self.home_motor = tk.Button(self.motor_control_panel, text="Home Motor", command=self.motor.home)
@@ -53,19 +63,22 @@ class ControlPanel(tk.Tk):
         self.move_motor_button.grid(row=1, column=0, padx=10, pady=5)
 
         # Spectrometer Control
-        self.spectrometer_panel = tk.LabelFrame(self, text="SM440 Handheld CCD Control")
+        self.spectrometer_panel = tk.LabelFrame(self.controls_frame, text="SM440 Handheld CCD Control")
         self.spectrometer_panel.pack(padx=10, pady=10, fill="both")
 
-        self.int_time_label = tk.Label(self.spectrometer_panel, text="Set Integration Time:")
+        self.int_time_label = tk.Label(self.spectrometer_panel, text="Set Integration Time (ms):")
         self.int_time_label.grid(row=0, column=0, padx=10, pady=5)
 
         self.int_time_entry = tk.Entry(self.spectrometer_panel)
         self.int_time_entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
-        self.int_time_entry.insert(0, "3000")
-        self.int_time_entry.bind("<Return>", self.set_int_time_click)
+        self.int_time_entry.insert(0, "30")
+        self.int_time_entry.bind("<Return>", self.set_settings_click)
 
-        self.set_int_time_btn = tk.Button(self.spectrometer_panel, text="Set", command=self.set_int_time_click)
-        self.set_int_time_btn.grid(row=0, column=2, padx=5, pady=5)
+        self.int_time_show_box = tk.Entry(self.spectrometer_panel, state="readonly")
+        self.int_time_show_box.grid(row=0, column=2, padx=10, pady=5, sticky="ew")
+
+        self.set_int_time_btn = tk.Button(self.spectrometer_panel, text="Set", command=self.set_settings_click)
+        self.set_int_time_btn.grid(row=0, column=3, padx=5, pady=5)
 
         self.time_avg_label = tk.Label(self.spectrometer_panel, text="Set Time Average:")
         self.time_avg_label.grid(row=1, column=0, padx=10, pady=5)
@@ -73,10 +86,12 @@ class ControlPanel(tk.Tk):
         self.time_avg_entry = tk.Entry(self.spectrometer_panel)
         self.time_avg_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
         self.time_avg_entry.insert(0, "1")
-        self.time_avg_entry.bind("<Return>", self.set_time_avg_click)
+        self.time_avg_entry.bind("<Return>", self.set_settings_click)
 
-        self.set_time_avg_btn = tk.Button(self.spectrometer_panel, text="Set", command=self.set_time_avg_click)
-        self.set_time_avg_btn.grid(row=1, column=2, padx=5, pady=5)
+        self.time_avg_show_box = tk.Entry(self.spectrometer_panel, state="readonly")
+        self.time_avg_show_box.grid(row=1, column=2, padx=10, pady=5, sticky="ew")
+
+        self.set_settings_click() # Set initial settings
 
         self.measure_spectrum = tk.Button(self.spectrometer_panel, text="Measure Spectrum", command=self.measure_spectrum_click)
         self.measure_spectrum.grid(row=3, column=0, padx=10, pady=5)
@@ -94,54 +109,112 @@ class ControlPanel(tk.Tk):
         self.plot_spectrum_btn = tk.Button(self.spectrometer_panel, text="Save Spectrum Plot", command=self.save_plot_spectrum_click)
         self.plot_spectrum_btn.grid(row=3, column=2, padx=5, pady=5)
 
-        self.show_max_btn = tk.Button(self.spectrometer_panel, text="Show Maximum Value Pixel", command=self.show_max_val_pixel)
+        self.show_max_btn = tk.Button(self.spectrometer_panel, text="Display Maximum Value Pixel", command=self.show_max_val_pixel)
         self.show_max_btn.grid(row=3, column=3, padx=5, pady=5)
+
+        # Live Spectrometer View
+        self.live_view_active = False
+
+        self.fig = Figure(figsize=(5.5, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.line, = self.ax.plot([], [], color="#2563eb", linewidth=1.2)
+        self.ax.set_title("Live Spectrophotometer View", fontsize=14)
+        self.ax.set_xlabel("Wavelength (nm)")
+        self.ax.set_ylabel("Intensity (counts)")
+        self.ax.grid(True, linestyle="--", alpha=0.4)
+        self.ax.set_xlim(np.min(self.spec.wavelengths), np.max(self.spec.wavelengths))
+        self.ax.set_ylim(0, 2 ** 16)
+
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+        self.canvas.get_tk_widget().pack(padx=10, pady=10, fill="both", expand=True)
+
+        self.live_view_btn = tk.Button(self.spectrometer_panel, text="Start Live View", command=self.toggle_live_view)
+        self.live_view_btn.grid(row=4, column=0, padx=10, pady=5)
+
+    def connect_motor(self):
+         self.motor = K10CR2("55547014")
+
+    def connect_spectrometer(self):
+        self.spec = Spectrometer()
 
     def move_motor_click(self):
         try:
             position = float(self.move_position_entry.get())
         except ValueError:
-            tk.messagebox.showerror("Error", "Please enter a valid number for position.")
+            messagebox.showerror("Error", "Please enter a valid number for position.")
             return
         self.motor.move(position, 60000)
 
-    def set_int_time_click(self, event=None):
+    def set_settings_click(self, event=None):
         try:
-            value = int(self.int_time_entry.get())
+            t_int_val = float(self.int_time_entry.get())
         except ValueError:
-            tk.messagebox.showerror("Error", "Please enter a valid integer for integration time.")
+            messagebox.showerror("Error", "Please enter a valid number for integration time.")
             return
-        self.spec.set_int_time(value)
 
-    def set_time_avg_click(self, event=None):
         try:
-            value = int(self.time_avg_entry.get())
+            t_avg_val = int(self.time_avg_entry.get())
         except ValueError:
-            tk.messagebox.showerror("Error", "Please enter a valid integer for time average.")
+            messagebox.showerror("Error", "Please enter a valid integer for time average.")
             return
-        self.spec.set_time_avg(value)
+        
+        self.spec.set_int_time(t_int_val) # Push int time to spectrometer
+        true_t_int_val = int(t_int_val * 50) / 50 # Calculate actual integration time, stepped by 20 microseconds
+
+        self.spec.set_time_avg(t_avg_val)
+
+        self.update_displays(true_t_int_val, t_avg_val) # Show settings in display boxes
+
+    def update_displays(self, t_int: float, t_avg: int):
+        self.int_time_show_box.config(state="normal")
+        self.int_time_show_box.delete(0, tk.END)
+        self.int_time_show_box.insert(0, str(t_int))
+        self.int_time_show_box.config(state="readonly")
+
+        self.time_avg_show_box.config(state="normal")
+        self.time_avg_show_box.delete(0, tk.END)
+        self.time_avg_show_box.insert(0, str(t_avg))
+        self.time_avg_show_box.config(state="readonly")
 
     def measure_spectrum_click(self):
-        self.spec.measure()
-        self.spec.plot_spectrum_pixels()
+        if not self.live_view_active:
+            self.spec.measure()
+        else:
+            self.toggle_live_view()
+
+        self.spec.plot_spectrum()
 
     def save_data_spectrum_click(self):
         if not self.filename_entry.get().strip():
-                    tk.messagebox.showerror("Error", "Please enter a filename.")
+                    messagebox.showerror("Error", "Please enter a filename.")
                     return
         filename = "Outputs/" + self.filename_entry.get().strip()
         self.spec.save_spectrum(filename)
 
     def save_plot_spectrum_click(self):
         if not self.filename_entry.get().strip():
-                    tk.messagebox.showerror("Error", "Please enter a filename.")
+                    messagebox.showerror("Error", "Please enter a filename.")
                     return
         filename = "Outputs/" + self.filename_entry.get().strip()
         self.spec.plot_spectrum(filename, show=False)
 
     def show_max_val_pixel(self):
             max_pixel = np.argmax(self.spec.spectrum)
-            tk.messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+            messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+
+    def toggle_live_view(self):
+        self.live_view_active = not self.live_view_active
+        self.live_view_btn.config(text="Stop Live View" if self.live_view_active else "Start Live View")
+        if self.live_view_active:
+            self.update_live_view()
+
+    def update_live_view(self):
+        if not self.live_view_active:
+            return
+        self.spec.measure(verbatim=False)
+        self.line.set_data(self.spec.wavelengths, self.spec.spectrum)
+        self.canvas.draw_idle()
+        self.after(1, self.update_live_view)  # measure() itself paces this via lIntTime
 
 if __name__ == "__main__":
     app = ControlPanel()
