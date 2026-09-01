@@ -76,11 +76,13 @@ class Spectrometer():
             if sRtn < 0:
                 raise Exception("spInitGivenChannel Error")
 
-    def set_int_time(self, t: int, verbatim: bool = False):
+    def set_int_time(self, t: int, convert_units: bool = True, verbatim: bool = False):
+        if convert_units:
+            t = ms_to_real_int_time(t)
         self.DeviceInfo.lIntTime = (int)(t)
         sRtn = self.spdb.spSetIntEx(self.DeviceInfo.lIntTime, 0)
         if verbatim:
-            print(f"Integration time set at {t}")
+            print(f"Integration time set at {t} ms")
 
     def set_time_avg(self, k: int, verbatim: bool = False):
         self.DeviceInfo.lTimeAvg = (int)(k)
@@ -111,8 +113,8 @@ class Spectrometer():
         self.spectrum = np.array(DataArray[start:end])
 
     def wavelength_calibration(self):
-        wavelength_values = [253.7, 313.2, 365.0, 404.7, 435.8, 546.1, 577.0, 579.1, 696.5, 763.5, 811.5, 912.3] # STILL NEEDS TO BE CALIBRATED
-        pixel_values = [348, 465, 567, 643, 703, 910, 967, 971, 1186, 1306, 1392, 1570]
+        wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320] # STILL NEEDS TO BE CALIBRATED
+        pixel_values = [1786, 1708, 1631, 1504, 1425, 1338, 1248, 1153, 1050, 608]
 
         # Fit a cubic polynomial: wavelength as a function of pixel number
         coefficients = np.polyfit(pixel_values, wavelength_values, deg=3)
@@ -181,6 +183,17 @@ class Spectrometer():
             plt.show()
         else:
             plt.close()
+
+def ms_to_real_int_time(t):
+    """
+    Converts ms to the correct integration time unit.
+    
+    For some reason, the spSetIntEx function does not work in ms or any other unit that makes sense.
+    The real integration time is set to lIntegTime * 20 microseconds.
+    This function takes the integration time in milliseconds and converts it to the correct input for the spSetIntEx function.
+    This works because t_int = 50 * t * 20 microseconds = t * 1000 microseconds = t milliseconds. Number needs to be rounded to convert it into an integer.
+    """
+    return np.floor(50 * t)
 
 if __name__ == "__main__":
     spec = Spectrometer()
