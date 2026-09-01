@@ -128,7 +128,6 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 - 9:00 Figure out time integration units
 - 10:30 Print enclosure outline
 - 11:15 Code live view and improve control panel buttons
-- 12:00 Print opacity tool
 - 12:30 Design enclosure fit test print second version
 - 13:00 Light source arrived
 - 13:30 Assembling setup
