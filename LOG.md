@@ -130,8 +130,15 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 - 11:15 Code live view and improve control panel buttons
 - 12:00 Print opacity tool
 - 12:30 Design enclosure fit test print second version
+- 13:00 Light source arrived
+- 13:30 Assembling setup
+- 13:45 Testing spectrum measurements
 
 #### Notes
 
 ##### SP time integration units
 I wrote a script to see what the conversion unit is between the inputted int time number and real time, as I couldnt make sense of it. The documentation said it is 10/3 us/count, but my script (time_int_testing.py) gives something very close to 50 us / count. I have built this into the spectrometer control script.
+
+
+##### CCD dead pixel arrays
+When testing the Tungsten light source, I noticed the spectrum shows a sharp dip at the same place every time, even without atmospheric interference. When shining a flash light we can see the same dip but smaller. My guess is that there are a few pixel rows with a worse quantum efficiency, or there is some other problem preventing these pixels from functioning correctly. Specifically, pixels 2046-2078 have this problem, corresponding to a spectral range of ~728nm-738nm.
