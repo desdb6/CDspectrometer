@@ -132,7 +132,8 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 - 13:00 Light source arrived
 - 13:30 Assembling setup
 - 13:45 Testing spectrum measurements
-- 15:00 Designing 
+- 15:00 Designing fast axis alignment experiment
+- 17:00 Design collimator mount for light source
 
 #### Notes
 
@@ -154,4 +155,4 @@ I worked out the Mueller calculus and found a protocol that would work. We would
 
 $$I(\theta, \phi) \propto \cos(2\theta)\cos(2(\theta-\phi))$$
 
-We will align the two polarisers perpendicular to mace the first cosine as big as possible to see big changes in intensity when changing $$\phi$$. We then make the second term zero by putting $$\phi$$ perpendicular to $$\theta$$. At this point we can simply subtract 45 degrees to put $$\phi$$ and $$\theta$$ at a 45 degree angle to make CPL.
+We will align the two polarisers perpendicular to make the first cosine as big as possible to see big changes in intensity when changing $$\phi$$. We then make the second term zero by putting $$\phi$$ perpendicular to $$\theta$$. At this point we can simply subtract 45 degrees to put $$\phi$$ and $$\theta$$ at a 45 degree angle to make CPL.
