@@ -123,3 +123,36 @@ https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0059840
 
 ##### CCD photospectrometer calibration
 We did this by basically using the Jasco CD as a monochromator, shining 10nm bandwidth light into the CCD fiber and noting the most intense pixel. The converstion from pixels to wavelengths is then done by fitting a cubic polynomial through the datapoints. The results show that the calibration hard coded into the SP python example is very wrong, and most likely not meant to be used for the SM440 photospectrometer; good that we checked this :)
+
+### Tuesday 01/09/2026
+- 9:00 Figure out time integration units
+- 10:30 Print enclosure outline
+- 11:15 Code live view and improve control panel buttons
+- 12:30 Design enclosure fit test print second version
+- 13:00 Light source arrived
+- 13:30 Assembling setup
+- 13:45 Testing spectrum measurements
+- 15:00 Designing fast axis alignment experiment
+- 17:00 Design collimator mount for light source
+
+#### Notes
+
+##### SP time integration units
+I wrote a script to see what the conversion unit is between the inputted int time number and real time, as I couldn't make sense of it. The documentation said it is 10/3 us/count, but my script (time_int_testing.py) gives something very close to 50 us / count. I have built this into the spectrometer control script.
+
+
+##### CCD dead pixel arrays
+When testing the Tungsten light source, I noticed the spectrum shows a sharp dip at the same place every time, even without atmospheric interference. When shining a flash light we can see the same dip but smaller. My guess is that there are a few pixel rows with a worse quantum efficiency, or there is some other problem preventing these pixels from functioning correctly. Specifically, pixels 2046-2078 have this problem, corresponding to a spectral range of ~728nm-738nm.
+
+##### Alignment experiment setup
+We have to align the setup in at least two ways:
+1. Rotation around the beam axis
+2. Angle of incidence (has to be perpendicular to the surface of the optomechanical component)
+
+Rotation around the beam axis: The fresnel rhomb retarder is difficult to align as it is not placed on a rotating mount. I think it is more practical to leave the fresnel rhomb retarder at an arbitrary angle (but near vertical), and to align the linear polariser on the motorized mount, which can be very accurately moved. We need to design an experiment where it is possible to find a maximum\minimum by changing only **one** setting (preferable the motor position).
+
+I worked out the Mueller calculus and found a protocol that would work. We would put a second linear polariser behind the fresnel rhomb, work in the reference frame of the fast axis of the second polariser and define the angles $$\phi$$ and $$\theta$$ as the angles between the fast axes of the first linear polariser and fresnel rhomb respectively. The transmitted intensity for an unpolarised beam is then 
+
+$$I(\theta, \phi) \propto \cos(2\theta)\cos(2(\theta-\phi))$$
+
+We will align the two polarisers perpendicular to make the first cosine as big as possible to see big changes in intensity when changing $$\phi$$. We then make the second term zero by putting $$\phi$$ perpendicular to $$\theta$$. At this point we can simply subtract 45 degrees to put $$\phi$$ and $$\theta$$ at a 45 degree angle to make CPL.
