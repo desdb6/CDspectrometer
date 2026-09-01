@@ -134,6 +134,7 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 - 13:45 Testing spectrum measurements
 - 15:00 Designing fast axis alignment experiment
 - 17:00 Design collimator mount for light source
+- 17:30 Look in LASER room for filters for fast axis alignment experiment
 
 #### Notes
 
