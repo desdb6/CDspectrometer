@@ -127,6 +127,7 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 ### Tuesday 01/09/2026
 - 9:00 Figure out time integration units
 - 10:30 Print enclosure outline
+- 11:15 Code live view and improve control panel buttons
 
 #### Notes
 
