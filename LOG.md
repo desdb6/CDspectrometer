@@ -129,6 +129,7 @@ We did this by basically using the Jasco CD as a monochromator, shining 10nm ban
 - 10:30 Print enclosure outline
 - 11:15 Code live view and improve control panel buttons
 - 12:00 Print opacity tool
+- 12:30 Design enclosure fit test print second version
 
 #### Notes
 
