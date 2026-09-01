@@ -151,7 +151,7 @@ We have to align the setup in at least two ways:
 
 Rotation around the beam axis: The fresnel rhomb retarder is difficult to align as it is not placed on a rotating mount. I think it is more practical to leave the fresnel rhomb retarder at an arbitrary angle (but near vertical), and to align the linear polariser on the motorized mount, which can be very accurately moved. We need to design an experiment where it is possible to find a maximum\minimum by changing only **one** setting (preferable the motor position).
 
-I worked out the Mueller calculus and found a protocol that would work. We would put a second linear polariser behind the fresnel rhomb, work in the reference frame of the fast axis of thes second polariser and define the angles $$\phi$$ and $$\theta$$ as the angles between the fast axes of the first linear polariser and fresnel rhomb respectively. The transmitted intensity for an onpolarised beam is then 
+I worked out the Mueller calculus and found a protocol that would work. We would put a second linear polariser behind the fresnel rhomb, work in the reference frame of the fast axis of the second polariser and define the angles $$\phi$$ and $$\theta$$ as the angles between the fast axes of the first linear polariser and fresnel rhomb respectively. The transmitted intensity for an unpolarised beam is then 
 
 $$I(\theta, \phi) \propto \cos(2\theta)\cos(2(\theta-\phi))$$
 
