@@ -173,7 +173,7 @@ We will align the two polarisers perpendicular to make the first cosine as big a
 #### Notes
 
 ##### Alignment experiment setup detector
-I tried making the setup using a power and energy meter, but the noise due to temperature fluctuations seems to be too big. If I hold my hand in front of the detector or blow air, the noise is as big as 2-4x the signal. I have programmed a script to use the CCD to integrate the spectrum over a fixed range of wavelengths, which is less susceptible to noise.
+I tried making the setup using a power and energy meter, but the noise due to temperature fluctuations seems to be too big. If I hold my hand in front of the detector or blow air, the noise is as big as 2-4x the signal. I have programmed a script (control_panel_alignment.py) to use the CCD to integrate the spectrum over a fixed range of wavelengths, which is less susceptible to noise.
 
 Alignment to second linear polarizer: 5.1 degrees
 
