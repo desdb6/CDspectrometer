@@ -175,6 +175,6 @@ I tried making the setup using a power and energy meter, but the noise due to te
 
 Alignment to second linear polarizer: 5.1 degrees
 
-Alignment to fresnel rhomb: 81.4 degrees
+Alignment to fresnel rhomb: 81.40 degrees
 
 The excel crashed so I do not have the data from the first measurements anymore. I decided to automate the process in python for the data acquisition and simply look for the minimum.
