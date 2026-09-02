@@ -167,6 +167,8 @@ We will align the two polarisers perpendicular to make the first cosine as big a
 - 11:15 Print second front collimator holder
 - 12:15 Visit: temporal resolution fluorescence spectrometer
 - 13:00 Fast axis alignment measurements
+- 15:30 3D print enclosure fit
+- 17:00 Design enclosure
 
 #### Notes
 
