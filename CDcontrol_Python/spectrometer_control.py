@@ -45,6 +45,10 @@ class Spectrometer():
         # Calibrate wavelengths
         self.wavelength_calibration()
 
+        # Darkframe measuring
+        self.subtract_dark = False
+        self.baseline = None
+
     def check_connections(self):
             sRtn = self.spdb.spTestAllChannels(0)
             if sRtn <= 0:
@@ -111,6 +115,10 @@ class Spectrometer():
         start = self.DeviceInfo.EffectivePixelIndex
         end = start + self.DeviceInfo.nRealPixelNo
         self.spectrum = np.array(DataArray[start:end])
+
+        # Optional: Remove dark
+        if self.subtract_dark and self.baseline is not None:
+            self.spectrum = self.spectrum - self.baseline
 
     def wavelength_calibration(self):
         wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320] # STILL NEEDS TO BE CALIBRATED
@@ -183,6 +191,19 @@ class Spectrometer():
             plt.show()
         else:
             plt.close()
+
+    def measure_baseline(self):
+        """Make a smooth darkframe correction by fitting a third degree polynomial to measured data."""
+        self.baseline = None # Make measurement without baseline
+        self.measure(verbatim=False)
+        coefficients = np.polyfit(self.wavelengths, self.spectrum, deg=3)
+
+        # Build a wavelength -> darkframe lookup table
+        self.baseline = np.polyval(coefficients, self.wavelengths)
+
+        self.subtract_dark = True
+        
+        
 
 def ms_to_real_int_time(t):
     """

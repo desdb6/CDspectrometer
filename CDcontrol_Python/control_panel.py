@@ -4,6 +4,8 @@ Author: Des De Borger
 Last modified: 27/08/2026
 """
 
+import threading
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -18,7 +20,7 @@ class ControlPanel(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("CD Spectrometer Control Panel")
-        self.geometry("1150x420")  # widen the window to fit both columns
+        self.geometry("1150x560")  # widen the window to fit both columns
 
         # Left column: holds all existing control panels
         self.controls_frame = tk.Frame(self)
@@ -49,6 +51,8 @@ class ControlPanel(tk.Tk):
         self.connect_spec_btn.grid(row=0, column=1, padx=10, pady=5)
 
         # Motor Control
+        self.motor_moving = False
+
         self.motor_control_panel = tk.LabelFrame(self.controls_frame, text="K10CR2 Motorized Mount Control")
         self.motor_control_panel.pack(padx=10, pady=10, fill="both")
 
@@ -112,6 +116,9 @@ class ControlPanel(tk.Tk):
         self.show_max_btn = tk.Button(self.spectrometer_panel, text="Display Maximum Value Pixel", command=self.show_max_val_pixel)
         self.show_max_btn.grid(row=3, column=3, padx=5, pady=5)
 
+        self.baseline_btn = tk.Button(self.spectrometer_panel, text="Measure Baseline", command=self.spec.measure_baseline)
+        self.baseline_btn.grid(row=4, column=0, padx=10, pady=5)
+
         # Live Spectrometer View
         self.live_view_active = False
 
@@ -129,7 +136,7 @@ class ControlPanel(tk.Tk):
         self.canvas.get_tk_widget().pack(padx=10, pady=10, fill="both", expand=True)
 
         self.live_view_btn = tk.Button(self.spectrometer_panel, text="Start Live View", command=self.toggle_live_view)
-        self.live_view_btn.grid(row=4, column=0, padx=10, pady=5)
+        self.live_view_btn.grid(row=5, column=0, padx=10, pady=5)
 
     def connect_motor(self):
          self.motor = K10CR2("55547014")
@@ -143,7 +150,21 @@ class ControlPanel(tk.Tk):
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid number for position.")
             return
-        self.motor.move(position, 60000)
+
+        if self.motor_moving:
+            return  # ignore clicks while a move is already in progress
+
+        self.motor_moving = True
+        self.move_motor_button.config(state="disabled")
+
+        def worker():
+            try:
+                self.motor.move(position, 60000)
+            finally:
+                self.motor_moving = False
+                self.after(0, lambda: self.move_motor_button.config(state="normal"))
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def set_settings_click(self, event=None):
         try:
