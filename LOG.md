@@ -161,5 +161,12 @@ We will align the two polarisers perpendicular to make the first cosine as big a
 ### Wednesday 02/09/2026
 - 9:00 Print front collimator holder
 - 9:15 Make excel for fast axis alignment experiment
+- 9:45 Setup experiment
+- 10:15 Print opacity tool
+- 10:30 Setup experiment
+- 11:15 Print second front collimator holder
 
 #### Notes
+
+##### Alignment experiment setup detector
+I tried making the setup using a power and energy meter, but the noise due to temperature fluctuations seems to be too big. If I hold my hand in front of the detector or blow air, the noise is as big as 2-4x the signal.
