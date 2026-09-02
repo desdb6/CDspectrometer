@@ -157,3 +157,9 @@ I worked out the Mueller calculus and found a protocol that would work. We would
 $$I(\theta, \phi) \propto \cos(2\theta)\cos(2(\theta-\phi))$$
 
 We will align the two polarisers perpendicular to make the first cosine as big as possible to see big changes in intensity when changing $$\phi$$. We then make the second term zero by putting $$\phi$$ perpendicular to $$\theta$$. At this point we can simply subtract 45 degrees to put $$\phi$$ and $$\theta$$ at a 45 degree angle to make CPL.
+
+### Wednesday 02/09/2026
+- 9:00 Print front collimator holder
+- 9:15 Make excel for fast axis alignment experiment
+
+#### Notes
