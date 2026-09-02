@@ -165,8 +165,10 @@ We will align the two polarisers perpendicular to make the first cosine as big a
 - 10:15 Print opacity tool
 - 10:30 Setup experiment
 - 11:15 Print second front collimator holder
+- 12:15 Visit: temporal resolution fluorescence spectrometer
+- 13:00 Fast axis alignment measurements
 
 #### Notes
 
 ##### Alignment experiment setup detector
-I tried making the setup using a power and energy meter, but the noise due to temperature fluctuations seems to be too big. If I hold my hand in front of the detector or blow air, the noise is as big as 2-4x the signal.
+I tried making the setup using a power and energy meter, but the noise due to temperature fluctuations seems to be too big. If I hold my hand in front of the detector or blow air, the noise is as big as 2-4x the signal. I have programmed a script to use the CCD to integrate the spectrum over a fixed range of wavelengths, which is less susceptible to noise.
