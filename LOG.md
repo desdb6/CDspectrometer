@@ -187,6 +187,10 @@ The excel crashed so I do not have the data from the first measurements anymore.
 - 9:30 Code broken pixel range indicator
 - 10:00 Research CD formulas
 - 10:30 Code absorbance and CD funtionalities
+- 12:30 Debug code
+- 13:30 Test measurement
+- 15:00 Absorption spectra and make slides
+- 16:00 Group meeting
 
 #### Notes
 
@@ -199,3 +203,6 @@ In order of importance:
 - Reprint collimator holders
 - Calculate/find handedness depending on angle
 - Clean components
+
+##### Absorption spectra
+I tried to get some absorption spectra which look ok for the most part. I need to indicate the interval in which the light is intense enough to create a reliable signal, and also recheck the calibration as it seems to be off by around 20nm in the 700nm area. Luis provided me with minirods which show a peak at 750 on the commercial absorption spectrometer but 770nm in mine. However, the peak at 510nm lines up and the very first measurement I took did in fact show a peak at 750nm.
