@@ -399,6 +399,7 @@ class ControlPanel(tk.Tk):
             self.toggle_live_view()
 
         self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
+        self.cur_spectrum = self.absor_spectrum
         self.plot_absorbance_spectrum()
 
     def set_cd_settings_click(self, event=None):
