@@ -187,6 +187,8 @@ The excel crashed so I do not have the data from the first measurements anymore.
 - 9:30 Code broken pixel range indicator
 - 10:00 Research CD formulas
 - 10:30 Code absorbance and CD funtionalities
+- 12:30 Debug code
+- 13:30 Test measurement
 
 #### Notes
 
