@@ -59,6 +59,7 @@ class K10CR2():
 
         except Exception as e:
                 print(e)
+                raise
 
     def move(self, pos : float, t : float):
         pos_dec = Decimal(pos)

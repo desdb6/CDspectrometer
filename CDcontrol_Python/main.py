@@ -29,6 +29,13 @@ class ControlPanel(tk.Tk):
         self.title("CD Spectrometer Control Panel")
         self.geometry("1400x750")
 
+        # Flags for clickable buttons
+        self.motor_buttons_active = True
+        self.spectrometer_buttons_active = True
+
+        # Flag for moving motor
+        self.motor_moving = False
+
         # Left column: control panels
         self.controls_frame = tk.Frame(self)
         self.controls_frame.pack(side="left", fill="y", padx=5, pady=5)
@@ -62,8 +69,6 @@ class ControlPanel(tk.Tk):
         # ------------------------------------------------------------------
         # Motor Control
         # ------------------------------------------------------------------
-        self.motor_moving = False
-
         self.motor_control_panel = tk.LabelFrame(self.controls_frame, text="K10CR2 Motorized Mount Control")
         self.motor_control_panel.pack(padx=10, pady=10, fill="both")
 
@@ -124,7 +129,7 @@ class ControlPanel(tk.Tk):
         self.int_time_entry = tk.Entry(self.settings_panel)
         self.int_time_entry.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
         self.int_time_entry.insert(0, "30")
-        self.int_time_entry.bind("<Return>", self.set_settings_click)
+        self.int_time_entry.bind("<Return>", self.set_spectrometer_settings_click)
 
         self.int_time_show_box = tk.Entry(self.settings_panel, state="readonly", width=8)
         self.int_time_show_box.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
@@ -135,15 +140,13 @@ class ControlPanel(tk.Tk):
         self.time_avg_entry = tk.Entry(self.settings_panel)
         self.time_avg_entry.grid(row=1, column=1, padx=8, pady=5, sticky="ew")
         self.time_avg_entry.insert(0, "1")
-        self.time_avg_entry.bind("<Return>", self.set_settings_click)
+        self.time_avg_entry.bind("<Return>", self.set_spectrometer_settings_click)
 
         self.time_avg_show_box = tk.Entry(self.settings_panel, state="readonly", width=8)
         self.time_avg_show_box.grid(row=1, column=2, padx=8, pady=5, sticky="ew")
 
-        self.set_settings_btn = tk.Button(self.settings_panel, text="Set", command=self.set_settings_click)
+        self.set_settings_btn = tk.Button(self.settings_panel, text="Set", command=self.set_spectrometer_settings_click)
         self.set_settings_btn.grid(row=0, column=3, rowspan=2, padx=8, pady=5, sticky="ns")
-
-        self.set_settings_click()  # Set initial settings
 
         # -- Actions sub-panel --
         self.actions_panel = tk.LabelFrame(self.spectrometer_panel, text="Actions")
@@ -175,8 +178,22 @@ class ControlPanel(tk.Tk):
         self.cd_panel = tk.LabelFrame(self.spectrometer_panel, text="Circular Dichroism")
         self.cd_panel.grid(row=3, column=0, padx=8, pady=4, sticky="ew")
 
-        self.measure_cd_spectrum = tk.Button(self.cd_panel, text="Measure CD Spectrum", command=self.measure_reference_spectrum_click)
-        self.measure_cd_spectrum.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
+        self.cd_cycles_label = tk.Label(self.cd_panel, text="# Cycles:")
+        self.cd_cycles_label.grid(row=0, column=0, padx=8, pady=5, sticky="w")
+
+        self.cd_cycles_entry = tk.Entry(self.cd_panel)
+        self.cd_cycles_entry.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
+        self.cd_cycles_entry.insert(0, "3")
+        self.cd_cycles_entry.bind("<Return>", self.set_cd_settings_click)
+
+        self.cd_cycles_show_box = tk.Entry(self.cd_panel, state="readonly", width=8)
+        self.cd_cycles_show_box.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
+
+        self.cd_cycles_btn = tk.Button(self.cd_panel, text="Set", command=self.set_cd_settings_click)
+        self.cd_cycles_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ns")
+
+        self.measure_cd_spectrum = tk.Button(self.cd_panel, text="Measure CD Spectrum", command=self.measure_cd_spectrum_click)
+        self.measure_cd_spectrum.grid(row=1, column=0, padx=8, pady=5, sticky="ew")
 
         # -- Save sub-panel --
         self.save_panel = tk.LabelFrame(self.spectrometer_panel, text="Save")
@@ -222,6 +239,49 @@ class ControlPanel(tk.Tk):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(padx=10, pady=10, fill="both", expand=True)
 
+        # Home motor
+        self.home_motor_click()
+
+        # Set initial settings
+        self.set_spectrometer_settings_click()
+        self.set_cd_settings_click()
+
+    def toggle_motor_buttons(self):
+        if self.motor_buttons_active:
+            self.move_motor_button.config(state="disabled")
+            self.home_motor_button.config(state="disabled")
+            self.hor_pol_button.config(state="disabled")
+            self.vert_pol_button.config(state="disabled")
+            self.lhc_pol_button.config(state="disabled")
+            self.rhc_pol_button.config(state="disabled")
+            self.motor_buttons_active = False
+        elif not self.motor_buttons_active:
+            self.move_motor_button.config(state="normal")
+            self.home_motor_button.config(state="normal")
+            self.hor_pol_button.config(state="normal")
+            self.vert_pol_button.config(state="normal")
+            self.lhc_pol_button.config(state="normal")
+            self.rhc_pol_button.config(state="normal")
+            self.motor_buttons_active = True
+
+    def toggle_spectrometer_buttons(self):
+        if self.spectrometer_buttons_active:
+            self.measure_spectrum.config(state="disabled")
+            self.baseline_btn.config(state="disabled")
+            self.live_view_btn.config(state="disabled")
+            self.measure_reference_spectrum.config(state="disabled")
+            self.measure_absorbance_spectrum.config(state="disabled")
+            self.measure_cd_spectrum.config(state="disabled")
+            self.motor_buttons_active = False
+        elif not self.spectrometer_buttons_active:
+            self.measure_spectrum.config(state="normal")
+            self.baseline_btn.config(state="normal")
+            self.live_view_btn.config(state="normal")
+            self.measure_reference_spectrum.config(state="normal")
+            self.measure_absorbance_spectrum.config(state="normal")
+            self.measure_cd_spectrum.config(state="normal")
+            self.motor_buttons_active = True
+
     def connect_motor(self):
          self.motor = K10CR2("55547014")
 
@@ -233,24 +293,14 @@ class ControlPanel(tk.Tk):
             return  # ignore clicks while a move is already in progress
 
         self.motor_moving = True
-        self.move_motor_button.config(state="disabled")
-        self.home_motor_button.config(state="disabled")
-        self.hor_pol_button.config(state="disabled")
-        self.vert_pol_button.config(state="disabled")
-        self.lhc_pol_button.config(state="disabled")
-        self.rhc_pol_button.config(state="disabled")
+        self.toggle_motor_buttons()
 
         def worker():
             try:
                 self.motor.home()
             finally:
                 self.motor_moving = False
-                self.after(0, lambda: self.move_motor_button.config(state="normal"))
-                self.after(0, lambda: self.home_motor_button.config(state="normal"))
-                self.after(0, lambda: self.hor_pol_button.config(state="normal"))
-                self.after(0, lambda: self.vert_pol_button.config(state="normal"))
-                self.after(0, lambda: self.lhc_pol_button.config(state="normal"))
-                self.after(0, lambda: self.rhc_pol_button.config(state="normal"))
+                self.toggle_motor_buttons()
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -265,24 +315,14 @@ class ControlPanel(tk.Tk):
                 return  # ignore clicks while a move is already in progress
     
             self.motor_moving = True
-            self.move_motor_button.config(state="disabled")
-            self.home_motor_button.config(state="disabled")
-            self.hor_pol_button.config(state="disabled")
-            self.vert_pol_button.config(state="disabled")
-            self.lhc_pol_button.config(state="disabled")
-            self.rhc_pol_button.config(state="disabled")
+            self.toggle_motor_buttons()
     
             def worker():
                 try:
                     self.motor.move(position, 60000)
                 finally:
                     self.motor_moving = False
-                    self.after(0, lambda: self.move_motor_button.config(state="normal"))
-                    self.after(0, lambda: self.home_motor_button.config(state="normal"))
-                    self.after(0, lambda: self.hor_pol_button.config(state="normal"))
-                    self.after(0, lambda: self.vert_pol_button.config(state="normal"))
-                    self.after(0, lambda: self.lhc_pol_button.config(state="normal"))
-                    self.after(0, lambda: self.rhc_pol_button.config(state="normal"))
+                    self.toggle_motor_buttons()
     
             threading.Thread(target=worker, daemon=True).start()
 
@@ -293,28 +333,18 @@ class ControlPanel(tk.Tk):
             return  # ignore clicks while a move is already in progress
 
         self.motor_moving = True
-        self.move_motor_button.config(state="disabled")
-        self.home_motor_button.config(state="disabled")
-        self.hor_pol_button.config(state="disabled")
-        self.vert_pol_button.config(state="disabled")
-        self.lhc_pol_button.config(state="disabled")
-        self.rhc_pol_button.config(state="disabled")
+        self.toggle_motor_buttons()
 
         def worker():
             try:
                 self.motor.move(position, 60000)
             finally:
                 self.motor_moving = False
-                self.after(0, lambda: self.move_motor_button.config(state="normal"))
-                self.after(0, lambda: self.home_motor_button.config(state="normal"))
-                self.after(0, lambda: self.hor_pol_button.config(state="normal"))
-                self.after(0, lambda: self.vert_pol_button.config(state="normal"))
-                self.after(0, lambda: self.lhc_pol_button.config(state="normal"))
-                self.after(0, lambda: self.rhc_pol_button.config(state="normal"))
+                self.toggle_motor_buttons()
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def set_settings_click(self, event=None):
+    def set_spectrometer_settings_click(self, event=None):
         try:
             t_int_val = float(self.int_time_entry.get())
         except ValueError:
@@ -332,9 +362,9 @@ class ControlPanel(tk.Tk):
 
         self.spec.set_time_avg(t_avg_val)
 
-        self.update_displays(true_t_int_val, t_avg_val) # Show settings in display boxes
+        self.update_motor_displays(true_t_int_val, t_avg_val) # Show settings in display boxes
 
-    def update_displays(self, t_int: float, t_avg: int):
+    def update_motor_displays(self, t_int: float, t_avg: int):
         self.int_time_show_box.config(state="normal")
         self.int_time_show_box.delete(0, tk.END)
         self.int_time_show_box.insert(0, str(t_int))
@@ -371,20 +401,75 @@ class ControlPanel(tk.Tk):
         self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
         self.plot_absorbance_spectrum()
 
+    def set_cd_settings_click(self, event=None):
+        try:
+            self.cd_cycles = int(self.cd_cycles_entry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid integer for amount of cycles.")
+            return
+
+        self.cd_cycles_show_box.config(state="normal")
+        self.cd_cycles_show_box.delete(0, tk.END)
+        self.cd_cycles_show_box.insert(0, str(self.cd_cycles))
+        self.cd_cycles_show_box.config(state="readonly")
+        
+    def measure_cd_spectrum_click(self):
+        if self.motor_moving:
+            return
+
+        self.motor_moving = True
+        self.toggle_motor_buttons()
+
+        def worker():
+            try:
+                self.motor.home()
+
+                temp_lhc_intensities = np.zeros_like(self.spec.spectrum)
+                temp_rhc_intensities = np.zeros_like(self.spec.spectrum)
+                
+                for _ in range(self.cd_cycles):
+                    # Left handed spectrum
+                    position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["LHC"], 360)
+                    self.motor.move(position, 60000)
+                    self.spec.measure()
+                    temp_lhc_intensities = temp_lhc_intensities + self.spec.spectrum
+
+                    # Right handed spectrum
+                    position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["RHC"], 360)
+                    self.motor.move(position, 60000)
+                    self.spec.measure()
+                    self.rhc_intensities = self.spec.spectrum
+                    temp_rhc_intensities = temp_rhc_intensities + self.spec.spectrum
+
+                self.lhc_intensities = temp_lhc_intensities / self.cd_cycles
+                self.rhc_intensities = temp_rhc_intensities / self.cd_cycles
+
+                # CD signal
+                self.cd_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities)
+                self.ellipticity_spectrum = ellipticity_deg(self.lhc_intensities, self.rhc_intensities)
+
+                self.after(0, self.plot_cd_spectrum)
+            finally:
+                self.motor_moving = False
+                self.after(0, self.toggle_motor_buttons)
+                self.cur_spectrum = self.cd_spectrum
+
+        threading.Thread(target=worker, daemon=True).start()
+
     def save_data_spectrum_click(self):
         if not self.filename_entry.get().strip():
                     messagebox.showerror("Error", "Please enter a filename.")
                     return
         filename = "Outputs/" + self.filename_entry.get().strip()
         with open(filename, "w") as file:
-            file.write("Index\tIntensity\tIntensity\n")
+            file.write("Index\tWavelength\tIntensity\n")
             for j in range(self.spec.DeviceInfo.nRealPixelNo):
                 file.write(f"{j + 1}\t{self.spec.wavelengths[j]}\t{self.cur_spectrum[j]}\n")
 
     def save_plot_spectrum_click(self):
         if not self.filename_entry.get().strip():
-                    messagebox.showerror("Error", "Please enter a filename.")
-                    return
+            messagebox.showerror("Error", "Please enter a filename.")
+            return
         filename = "Outputs/" + self.filename_entry.get().strip()
         self.spec.plot_spectrum(filename, show=False)
 
@@ -426,6 +511,74 @@ class ControlPanel(tk.Tk):
         ax.set_ylabel("Absorbance", fontsize=11)
 
         ax.set_ybound(lower=0)
+
+        ax.grid(True, linestyle="--", alpha=0.4)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        ax.margins(x=0.01)
+        fig.tight_layout()
+
+        if filename:
+            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
+    def plot_cd_spectrum(self, filename: str = False, show: bool = True):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(self.spec.wavelengths, self.cd_spectrum, color="#2563eb", linewidth=1.2)
+
+        if self.spec.broken_wavelength_range is not None:
+            ax.fill_between(
+                self.spec.wavelengths, 0, 1,
+                where=self.spec.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Broken wavelengths range',
+                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+                )
+            ax.legend()
+
+        ax.set_title(f"Measured Circular Dichroism spectrum", fontsize=14, fontweight="bold", pad=12)
+        ax.set_xlabel("Wavelength (nm)", fontsize=11)
+        ax.set_ylabel("CD", fontsize=11)
+
+        ax.grid(True, linestyle="--", alpha=0.4)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        ax.margins(x=0.01)
+        fig.tight_layout()
+
+        if filename:
+            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
+    def plot_ellipticity_spectrum(self, filename: str = False, show: bool = True):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(self.spec.wavelengths, self.ellipticity_spectrum, color="#2563eb", linewidth=1.2)
+
+        if self.spec.broken_wavelength_range is not None:
+            ax.fill_between(
+                self.spec.wavelengths, 0, 1,
+                where=self.spec.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Broken wavelengths range',
+                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+                )
+            ax.legend()
+
+        ax.set_title(f"Measured Ellipticity spectrum", fontsize=14, fontweight="bold", pad=12)
+        ax.set_xlabel("Wavelength (nm)", fontsize=11)
+        ax.set_ylabel("Ellipticity", fontsize=11)
 
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.spines["top"].set_visible(False)

@@ -51,6 +51,9 @@ class Spectrometer():
         self.subtract_dark = False
         self.baseline = None
 
+        # Initialise spectrum
+        self.spectrum = np.zeros(self.DeviceInfo.nTOTPixelNo-self.DeviceInfo.EffectivePixelIndex)
+
     def check_connections(self):
             sRtn = self.spdb.spTestAllChannels(0)
             if sRtn <= 0:
@@ -123,7 +126,7 @@ class Spectrometer():
             self.spectrum = self.spectrum - self.baseline
 
     def wavelength_calibration(self):
-        wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320] # STILL NEEDS TO BE CALIBRATED
+        wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320]
         pixel_values = [1786, 1708, 1631, 1504, 1425, 1338, 1248, 1153, 1050, 608]
 
         # Fit a cubic polynomial: wavelength as a function of pixel number
@@ -185,6 +188,7 @@ class Spectrometer():
             plt.close()
 
     def plot_spectrum_pixels(self, filename: str = False, show: bool = True):
+        mask = (self.pixel_indices >= BROKEN_PIXEL_RANGE[0]) & (self.pixel_indices <= BROKEN_PIXEL_RANGE[1])
         fig, ax = plt.subplots(figsize=(10, 6))
 
         ax.plot(self.pixel_indices, self.spectrum, color="#2563eb", linewidth=1.2)
@@ -196,7 +200,7 @@ class Spectrometer():
         if BROKEN_PIXEL_RANGE is not None:
             ax.fill_between(
                 self.pixel_indices, 0, 2 ** 16,
-                where=BROKEN_PIXEL_RANGE,
+                where=mask,
                 color="#ff3838", alpha=0.5,
                 label='Broken pixel range'
                 )
