@@ -167,8 +167,8 @@ We will align the two polarisers perpendicular to make the first cosine as big a
 - 11:15 Print second front collimator holder
 - 12:15 Visit: temporal resolution fluorescence spectrometer
 - 13:00 Fast axis alignment measurements
-- 15:30 3D print enclosure fit
-- 17:00 Design enclosure
+- 14:30 3D print enclosure fit
+- 17:00 Design new cuvette holder
 
 #### Notes
 
@@ -180,3 +180,22 @@ Alignment to second linear polarizer: 5.1 degrees
 Alignment to fresnel rhomb: 81.40 degrees
 
 The excel crashed so I do not have the data from the first measurements anymore. I decided to automate the process in python for the data acquisition and simply look for the minimum.
+
+
+### Thursday 03/09/2026
+- 9:00 Print cuvette holder
+- 9:30 Code broken pixel range indicator
+- 10:00 Research CD formulas
+- 10:30 Code absorbance and CD funtionalities
+
+#### Notes
+
+##### To Do list until first prototype
+In order of importance:
+
+- Code Absorbance / CD spectrum functionalities
+- Print new cuvette holder
+- Design and print enclosure
+- Reprint collimator holders
+- Calculate/find handedness depending on angle
+- Clean components
