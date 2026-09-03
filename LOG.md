@@ -180,3 +180,22 @@ Alignment to second linear polarizer: 5.1 degrees
 Alignment to fresnel rhomb: 81.40 degrees
 
 The excel crashed so I do not have the data from the first measurements anymore. I decided to automate the process in python for the data acquisition and simply look for the minimum.
+
+
+### Thursday 03/09/2026
+- 9:00 Print cuvette holder
+- 9:30 Code broken pixel range indicator
+- 10:00 Research CD formulas
+- 10:30 Code absorbance and CD funtionalities
+
+#### Notes
+
+##### To Do list until first prototype
+In order of importance:
+
+- Code Absorbance / CD spectrum functionalities
+- Print new cuvette holder
+- Design and print enclosure
+- Reprint collimator holders
+- Calculate/find handedness depending on angle
+- Clean components
