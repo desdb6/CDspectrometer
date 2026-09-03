@@ -11,6 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+BROKEN_PIXEL_RANGE = [2044, 2079] # The CCD has some malfunctioning pixel columns. These will be shaded in red.
+
 # Define the DeviceInfo structure
 class DeviceInfo(ctypes.Structure):
     _fields_ = [
@@ -128,8 +130,15 @@ class Spectrometer():
         coefficients = np.polyfit(pixel_values, wavelength_values, deg=3)
 
         # Build a full pixel -> wavelength lookup table
-        pixel_indices = np.arange(1, self.DeviceInfo.nRealPixelNo + 1)
-        self.wavelengths = np.polyval(coefficients, pixel_indices)
+        self.pixel_indices = np.arange(1, self.DeviceInfo.nRealPixelNo + 1)
+        self.wavelengths = np.polyval(coefficients, self.pixel_indices)
+
+        if BROKEN_PIXEL_RANGE is not None:
+            self.broken_wavelength_range = np.polyval(coefficients, BROKEN_PIXEL_RANGE)
+            self.broken_wavelength_mask = (self.wavelengths >= self.broken_wavelength_range[0]) & (self.wavelengths <= self.broken_wavelength_range[1])
+        else:
+            self.broken_wavelength_range = None
+            self.broken_wavelength_mask = None
 
     def save_spectrum(self, filename: str):
         filepath = os.path.join(self.current_dir, filename + ".txt")
@@ -144,6 +153,15 @@ class Spectrometer():
         fig, ax = plt.subplots(figsize=(10, 6))
 
         ax.plot(self.wavelengths, self.spectrum, color="#2563eb", linewidth=1.2)
+
+        if self.broken_wavelength_range is not None:
+            ax.fill_between(
+                self.wavelengths, 0, 2 ** 16,
+                where=self.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Broken wavelengths range'
+                )
+            ax.legend()
 
         ax.set_title(f"Measured spectrum", fontsize=14, fontweight="bold", pad=12)
         ax.set_xlabel("Wavelength (nm)", fontsize=11)
@@ -169,11 +187,20 @@ class Spectrometer():
     def plot_spectrum_pixels(self, filename: str = False, show: bool = True):
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        ax.plot(self.spectrum, color="#2563eb", linewidth=1.2)
+        ax.plot(self.pixel_indices, self.spectrum, color="#2563eb", linewidth=1.2)
 
         ax.set_title(f"Measured spectrum", fontsize=14, fontweight="bold", pad=12)
         ax.set_xlabel("Pixel", fontsize=11)
         ax.set_ylabel("Intensity (counts)", fontsize=11)
+
+        if BROKEN_PIXEL_RANGE is not None:
+            ax.fill_between(
+                self.pixel_indices, 0, 2 ** 16,
+                where=BROKEN_PIXEL_RANGE,
+                color="#ff3838", alpha=0.5,
+                label='Broken pixel range'
+                )
+            ax.legend()
 
         ax.set_ybound(lower=0)
 
