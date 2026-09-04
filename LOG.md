@@ -206,3 +206,14 @@ In order of importance:
 
 ##### Absorption spectra
 I tried to get some absorption spectra which look ok for the most part. I need to indicate the interval in which the light is intense enough to create a reliable signal, and also recheck the calibration as it seems to be off by around 20nm in the 700nm area. Luis provided me with minirods which show a peak at 750 on the commercial absorption spectrometer but 770nm in mine. However, the peak at 510nm lines up and the very first measurement I took did in fact show a peak at 750nm.
+
+### Friday 03/09/2026
+- 9:00 Print front collimator holder
+
+#### Notes
+##### To Do list
+- Print collimator holders to fix alignment
+- Recalibrate 700nm wavelength range
+- Program intensity cutoff indicator
+- Measure more CD signals and look at oscillations
+
