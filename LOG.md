@@ -208,7 +208,12 @@ In order of importance:
 I tried to get some absorption spectra which look ok for the most part. I need to indicate the interval in which the light is intense enough to create a reliable signal, and also recheck the calibration as it seems to be off by around 20nm in the 700nm area. Luis provided me with minirods which show a peak at 750 on the commercial absorption spectrometer but 770nm in mine. However, the peak at 510nm lines up and the very first measurement I took did in fact show a peak at 750nm.
 
 ### Friday 03/09/2026
-- 9:00 Print front collimator holder
+- 9:00 Design and print front collimator holder
+- 9:45 Fix polarization convention
+- 10:15 Design back collimator holder
+- 10:45 CD measurement
+- 11:00 Print back collimator holder
+- 11:30 Beam alignment experiments (many)
 
 #### Notes
 ##### To Do list
@@ -217,3 +222,10 @@ I tried to get some absorption spectra which look ok for the most part. I need t
 - Program intensity cutoff indicator
 - Measure more CD signals and look at oscillations
 
+##### CD artefacts
+Even without a sample, we get a significant CD signal. This could be cause by a number of things.
+
+- The beam tilt: We can observe that the front collimator holder is slightly tilted which causes the beam to not travel parallel to the horizontal axis, but upwards. This could be due to removing the print from the printbed too fats which can cause warping. Later prints that were cooled down completely seemed to be aligned well. This tilt can mess with the polarization state as the incident angles for the total internal reflection will be different. Trying to align the beam gave results that are a little better in the 400-750nm range but worse around 1000nm. However trying to make the alignment worse by triyng to tilt the beam down a lot made it better overall.
+- Fast axis alignment
+- Dust on the linear polarizer: As the polariser turns, the beam will fall on a different spot on the polarizer which can cause differences in absorption
+- There is a oscillating signal which looks to be linear with the frequency. My theory is that the beam is diffracting at the polarizer in a different way if the polarizer is horizontal and vertical, but I still need to test this.
