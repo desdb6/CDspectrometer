@@ -214,6 +214,7 @@ I tried to get some absorption spectra which look ok for the most part. I need t
 - 10:45 CD measurement
 - 11:00 Print back collimator holder
 - 11:30 Beam alignment experiments (many)
+- 14:30 Fabry Perot test
 
 #### Notes
 ##### To Do list
@@ -229,6 +230,7 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - Fast axis alignment
 - Dust on the linear polarizer: As the polariser turns, the beam will fall on a different spot on the polarizer which can cause differences in absorption
 - There is a oscillating signal which looks to be linear with the frequency (also present without fresnel rhomb). My theory is that the beam is diffracting at the polarizer in a different way if the polarizer is horizontal and vertical, but I still need to test this.
+- Fabry perot etalon somewhere
 
 
 ##### To Do for next week
