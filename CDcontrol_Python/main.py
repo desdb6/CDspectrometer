@@ -21,7 +21,10 @@ from spectrometer_control import Spectrometer
 OFFSET_FRESNEL_ANGLE = np.mod(-8.6, 360)
 
 # Dict for polarisation angles
-POL_DICT = {"Horizontal": 0, "Vertical": 90, "LHC": 315, "RHC": 45}
+POL_DICT = {"Horizontal": 0, "Vertical": 90, "LHC": 45, "RHC": 315}
+
+# Weak signal cutoff, shades absorption spectra
+WEAK_SIGNAL_CUTOFF = 500
 
 class ControlPanel(tk.Tk):
     def __init__(self):
@@ -232,7 +235,7 @@ class ControlPanel(tk.Tk):
                 self.spec.wavelengths, 0, 2 ** 16,
                 where=self.spec.broken_wavelength_mask,
                 color="#ff3838", alpha=0.5,
-                label='Broken wavelengths range'
+                label='Malfunctioning pixel range'
                 )
             self.ax.legend(fontsize=6)
 
@@ -391,6 +394,7 @@ class ControlPanel(tk.Tk):
             self.toggle_live_view()
 
         self.ref_spectrum = self.spec.spectrum
+        self.weak_signal_mask = (self.ref_spectrum < WEAK_SIGNAL_CUTOFF)
 
     def measure_absorbance_spectrum_click(self):
         if not self.live_view_active:
@@ -424,7 +428,7 @@ class ControlPanel(tk.Tk):
         def worker():
             try:
                 self.motor.home()
-
+                
                 temp_lhc_intensities = np.zeros_like(self.spec.spectrum)
                 temp_rhc_intensities = np.zeros_like(self.spec.spectrum)
                 
@@ -446,8 +450,7 @@ class ControlPanel(tk.Tk):
                 self.rhc_intensities = temp_rhc_intensities / self.cd_cycles
 
                 # CD signal
-                self.cd_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities)
-                self.ellipticity_spectrum = ellipticity_deg(self.lhc_intensities, self.rhc_intensities)
+                self.cd_spectrum = ellipticity_millideg(self.lhc_intensities, self.rhc_intensities)
 
                 self.after(0, self.plot_cd_spectrum)
             finally:
@@ -496,13 +499,20 @@ class ControlPanel(tk.Tk):
         fig, ax = plt.subplots(figsize=(10, 6))
 
         ax.plot(self.spec.wavelengths, self.absor_spectrum, color="#2563eb", linewidth=1.2)
+        ax.fill_between(
+            self.spec.wavelengths, 0, 1,
+            where=self.weak_signal_mask,
+            color="#848282ff", alpha=0.5,
+            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
+            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+            )
 
         if self.spec.broken_wavelength_range is not None:
             ax.fill_between(
                 self.spec.wavelengths, 0, 1,
                 where=self.spec.broken_wavelength_mask,
                 color="#ff3838", alpha=0.5,
-                label='Broken wavelengths range',
+                label='Malfunctioning pixel range',
                 transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
                 )
             ax.legend()
@@ -532,20 +542,27 @@ class ControlPanel(tk.Tk):
         fig, ax = plt.subplots(figsize=(10, 6))
 
         ax.plot(self.spec.wavelengths, self.cd_spectrum, color="#2563eb", linewidth=1.2)
+        ax.fill_between(
+            self.spec.wavelengths, 0, 1,
+            where=self.weak_signal_mask,
+            color="#848282ff", alpha=0.5,
+            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
+            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+            )
 
         if self.spec.broken_wavelength_range is not None:
             ax.fill_between(
                 self.spec.wavelengths, 0, 1,
                 where=self.spec.broken_wavelength_mask,
                 color="#ff3838", alpha=0.5,
-                label='Broken wavelengths range',
+                label='Malfunctioning pixel range',
                 transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
                 )
             ax.legend()
 
         ax.set_title(f"Measured Circular Dichroism spectrum", fontsize=14, fontweight="bold", pad=12)
         ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("CD", fontsize=11)
+        ax.set_ylabel("CD (mdeg)", fontsize=11)
 
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.spines["top"].set_visible(False)
@@ -572,7 +589,7 @@ class ControlPanel(tk.Tk):
                 self.spec.wavelengths, 0, 1,
                 where=self.spec.broken_wavelength_mask,
                 color="#ff3838", alpha=0.5,
-                label='Broken wavelengths range',
+                label='Malfunctioning pixel range',
                 transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
                 )
             ax.legend()
@@ -616,9 +633,9 @@ def ellipticity_deg(intensity_l: float, intensity_r: float):
     """Calculate CD signal expressed as ellipticity"""
     return delta_absorbance(intensity_l, intensity_r) * np.log(10) * 45 / np.pi
 
-def molar_ellipticity_deg(intensity_l: float, intensity_r: float, c: float, l: float):
-    """Calculate CD signal expressed as molar ellipticity (wikipedia definition, deg cm**2/dmol)"""
-    return 100 * ellipticity_deg(intensity_l, intensity_r) / (c * l)
+def ellipticity_millideg(intensity_l: float, intensity_r: float):
+    """Calculate CD signal expressed as ellipticity in millidegrees"""
+    return 1000 * ellipticity_deg(intensity_l, intensity_r)
 
 if __name__ == "__main__":
     app = ControlPanel()

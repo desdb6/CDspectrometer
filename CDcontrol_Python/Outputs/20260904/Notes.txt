@@ -1,0 +1,5 @@
+CD_ref: white front holder
+CD_ref2: black front holder with post to tilt down
+CD_ref3: black front holder with post to tilt down and post to tilt back holder down
+CD_ref4: white front holder with post to tilt down, I would think this would be the worst one but it looks fine actually
+CD_rtef5: the same but slightly altered back collimator position for higher intensity
