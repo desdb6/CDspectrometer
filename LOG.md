@@ -214,6 +214,7 @@ I tried to get some absorption spectra which look ok for the most part. I need t
 - 10:45 CD measurement
 - 11:00 Print back collimator holder
 - 11:30 Beam alignment experiments (many)
+- 14:30 Fabry Perot test
 
 #### Notes
 ##### To Do list
@@ -228,4 +229,16 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - The beam tilt: We can observe that the front collimator holder is slightly tilted which causes the beam to not travel parallel to the horizontal axis, but upwards. This could be due to removing the print from the printbed too fats which can cause warping. Later prints that were cooled down completely seemed to be aligned well. This tilt can mess with the polarization state as the incident angles for the total internal reflection will be different. Trying to align the beam gave results that are a little better in the 400-750nm range but worse around 1000nm. However trying to make the alignment worse by triyng to tilt the beam down a lot made it better overall.
 - Fast axis alignment
 - Dust on the linear polarizer: As the polariser turns, the beam will fall on a different spot on the polarizer which can cause differences in absorption
-- There is a oscillating signal which looks to be linear with the frequency. My theory is that the beam is diffracting at the polarizer in a different way if the polarizer is horizontal and vertical, but I still need to test this.
+- There is a oscillating signal which looks to be linear with the frequency (also present without fresnel rhomb). My theory is that the beam is diffracting at the polarizer in a different way if the polarizer is horizontal and vertical, but I still need to test this.
+- Fabry perot etalon somewhere
+
+
+##### To Do for next week
+- Clean the polarizer
+- Figure out the CD artefacts
+- Make program more user friendly: error handling, user guide etc
+- Make icon for program
+- Discuss journal?
+- Design adjustable collimator holders
+- Design smaller cuvette holder
+- Make parts for UV-Vis absorption modular setup
