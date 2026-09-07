@@ -242,3 +242,18 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - Design adjustable collimator holders
 - Design smaller cuvette holder
 - Make parts for UV-Vis absorption modular setup
+
+
+### Monday 07/09/2026
+- 9:00 Print front collimator holder
+- 9:30 Test misalignments and figure out CD artefacts
+- 10:30 Design and print fiber holder
+- 11:00 Make code more user friendly
+- 11:30 Rebuild setup
+- 12:00 Turning collimator experiment
+- 12:30 Print collimator holder
+- 13:00 Make code more user friendly and make executable
+- 15:00 Print fiber holder
+- 15:30 Clean components 
+
+#### Notes
