@@ -31,13 +31,19 @@ class ControlPanel(tk.Tk):
         super().__init__()
         self.title("CD Spectrometer Control Panel")
         self.geometry("1400x750")
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Initialise spectra
+        self.cur_spectrum = None
+        self.ref_spectrum = None
 
         # Flags for clickable buttons
         self.motor_buttons_active = True
         self.spectrometer_buttons_active = True
 
-        # Flag for moving motor
+        # Flags for busy components
         self.motor_moving = False
+        self.spectrometer_busy = False
 
         # Left column: control panels
         self.controls_frame = tk.Frame(self)
@@ -50,12 +56,14 @@ class ControlPanel(tk.Tk):
         try:
             self.spec = Spectrometer()
         except Exception as e:
-            print(f"Error connecting spectrometer: {e}")
+            self.spec = None
+            messagebox.showwarning("Spectrometer not connected", f"Could not connect to spectrometer:\n{e}")
 
         try:
             self.motor = K10CR2("55547014")
         except Exception as e:
-            print(f"Error connecting motor: {e}") 
+            self.motor = None
+            messagebox.showwarning("Motorized mount not connected", f"Could not connect to motor:\n{e}")
 
         # ------------------------------------------------------------------
         # Connect Devices
@@ -119,6 +127,9 @@ class ControlPanel(tk.Tk):
         # ------------------------------------------------------------------
         # Spectrometer Control
         # ------------------------------------------------------------------
+        self.t_int_val = 30
+        self.t_avg_val = 1
+
         self.spectrometer_panel = tk.LabelFrame(self.controls_frame, text="SM440 Handheld CCD Control")
         self.spectrometer_panel.pack(padx=10, pady=10, fill="both")
 
@@ -155,10 +166,10 @@ class ControlPanel(tk.Tk):
         self.actions_panel = tk.LabelFrame(self.spectrometer_panel, text="Actions")
         self.actions_panel.grid(row=1, column=0, padx=8, pady=4, sticky="ew")
 
-        self.measure_spectrum = tk.Button(self.actions_panel, text="Measure Spectrum", command=self.measure_spectrum_click)
+        self.measure_spectrum = tk.Button(self.actions_panel, text="Measure Reference Spectrum", command=self.measure_spectrum_click)
         self.measure_spectrum.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
 
-        self.baseline_btn = tk.Button(self.actions_panel, text="Subtract Baseline", command=self.spec.measure_baseline)
+        self.baseline_btn = tk.Button(self.actions_panel, text="Subtract Baseline", command=self.measure_baseline)
         self.baseline_btn.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
 
         self.live_view_btn = tk.Button(self.actions_panel, text="Start Live View", command=self.toggle_live_view)
@@ -171,11 +182,8 @@ class ControlPanel(tk.Tk):
         self.absorbance_panel = tk.LabelFrame(self.spectrometer_panel, text="Absorbance")
         self.absorbance_panel.grid(row=2, column=0, padx=8, pady=4, sticky="ew")
 
-        self.measure_reference_spectrum = tk.Button(self.absorbance_panel, text="Measure Reference Spectrum", command=self.measure_reference_spectrum_click)
-        self.measure_reference_spectrum.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
-
         self.measure_absorbance_spectrum = tk.Button(self.absorbance_panel, text="Measure Absorbance Spectrum", command=self.measure_absorbance_spectrum_click)
-        self.measure_absorbance_spectrum.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
+        self.measure_absorbance_spectrum.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
 
         # -- CD sub-panel --
         self.cd_panel = tk.LabelFrame(self.spectrometer_panel, text="Circular Dichroism")
@@ -227,27 +235,49 @@ class ControlPanel(tk.Tk):
         self.ax.set_xlabel("Wavelength (nm)")
         self.ax.set_ylabel("Intensity (counts)")
         self.ax.grid(True, linestyle="--", alpha=0.4)
-        self.ax.set_xlim(np.min(self.spec.wavelengths), np.max(self.spec.wavelengths))
-        self.ax.set_ylim(0, 2 ** 16)
 
-        if self.spec.broken_wavelength_range is not None:
-            self.ax.fill_between(
-                self.spec.wavelengths, 0, 2 ** 16,
-                where=self.spec.broken_wavelength_mask,
-                color="#ff3838", alpha=0.5,
-                label='Malfunctioning pixel range'
+        try:
+            self.ax.set_xlim(np.min(self.spec.wavelengths), np.max(self.spec.wavelengths))
+            self.ax.set_ylim(0, 2 ** 16)
+
+            if self.spec.broken_wavelength_range is not None:
+                self.ax.fill_between(
+                    self.spec.wavelengths, 0, 2 ** 16,
+                    where=self.spec.broken_wavelength_mask,
+                    color="#ff3838", alpha=0.5,
+                    label='Malfunctioning pixel range'
+                    )
+                self.ax.legend(fontsize=6)
+        except AttributeError:
+            # self.spec is None or missing expected attributes (not connected)
+            self.ax.set_xlim(0, 1)
+            self.ax.set_ylim(0, 1)
+            self.ax.text(
+                0.5, 0.5, "Spectrometer not connected",
+                ha="center", va="center", transform=self.ax.transAxes,
+                fontsize=11, color="#888888"
                 )
-            self.ax.legend(fontsize=6)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(padx=10, pady=10, fill="both", expand=True)
 
         # Home motor
-        self.home_motor_click()
+        if self.motor is not None:
+            self.home_motor_click()
 
         # Set initial settings
-        self.set_spectrometer_settings_click()
+        if self.spec is not None:
+            self.set_spectrometer_settings_click()
         self.set_cd_settings_click()
+
+        # Turn off buttons if not connected
+        if self.motor is None:
+            self.motor_buttons_active = True   # set to true, toggle turns it to false
+            self.toggle_motor_buttons()
+
+        if self.spec is None:
+            self.spectrometer_buttons_active = True
+            self.toggle_spectrometer_buttons()
 
     def toggle_motor_buttons(self):
         if self.motor_buttons_active:
@@ -272,24 +302,59 @@ class ControlPanel(tk.Tk):
             self.measure_spectrum.config(state="disabled")
             self.baseline_btn.config(state="disabled")
             self.live_view_btn.config(state="disabled")
-            self.measure_reference_spectrum.config(state="disabled")
             self.measure_absorbance_spectrum.config(state="disabled")
             self.measure_cd_spectrum.config(state="disabled")
-            self.motor_buttons_active = False
+            self.spectrometer_buttons_active = False
         elif not self.spectrometer_buttons_active:
             self.measure_spectrum.config(state="normal")
             self.baseline_btn.config(state="normal")
             self.live_view_btn.config(state="normal")
-            self.measure_reference_spectrum.config(state="normal")
             self.measure_absorbance_spectrum.config(state="normal")
             self.measure_cd_spectrum.config(state="normal")
-            self.motor_buttons_active = True
+            self.spectrometer_buttons_active = True
 
     def connect_motor(self):
-         self.motor = K10CR2("55547014")
+        try:
+            self.motor = K10CR2("55547014")
+        except Exception as e:
+            self.motor = None
+            messagebox.showerror("Error", f"Could not connect to motor:\n{e}")
+            return
+
+        if not self.motor_buttons_active:
+            self.toggle_motor_buttons()
 
     def connect_spectrometer(self):
-        self.spec = Spectrometer()
+        try:
+            self.spec = Spectrometer()
+        except Exception as e:
+            self.spec = None
+            messagebox.showerror("Error", f"Could not connect to spectrometer:\n{e}")
+            return
+
+        if not self.spectrometer_buttons_active:
+            self.toggle_spectrometer_buttons()
+
+        # Refresh the live-view plot now that self.spec is populated
+        self.ax.clear()
+        self.line, = self.ax.plot([], [], color="#2563eb", linewidth=1.2)
+        self.ax.set_title("Live Spectrophotometer View", fontsize=14)
+        self.ax.set_xlabel("Wavelength (nm)")
+        self.ax.set_ylabel("Intensity (counts)")
+        self.ax.grid(True, linestyle="--", alpha=0.4)
+        self.ax.set_xlim(np.min(self.spec.wavelengths), np.max(self.spec.wavelengths))
+        self.ax.set_ylim(0, 2 ** 16)
+
+        if self.spec.broken_wavelength_range is not None:
+            self.ax.fill_between(
+                self.spec.wavelengths, 0, 2 ** 16,
+                where=self.spec.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Malfunctioning pixel range'
+                )
+            self.ax.legend(fontsize=6)
+
+        self.canvas.draw_idle()
 
     def home_motor_click(self):
         if self.motor_moving:
@@ -349,23 +414,29 @@ class ControlPanel(tk.Tk):
 
     def set_spectrometer_settings_click(self, event=None):
         try:
-            t_int_val = float(self.int_time_entry.get())
+            self.new_t_int_val = float(self.int_time_entry.get())
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid number for integration time.")
             return
 
         try:
-            t_avg_val = int(self.time_avg_entry.get())
+            self.new_t_avg_val = int(self.time_avg_entry.get())
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid integer for time average.")
             return
+
+        if self.new_t_int_val != self.t_int_val: # Safeguard that the same settings are used for reference and absorbance spectra
+            self.ref_spectrum = None
         
-        self.spec.set_int_time(t_int_val) # Push int time to spectrometer
-        true_t_int_val = int(t_int_val * 50) / 50 # Calculate actual integration time, stepped by 20 microseconds
+        self.spec.set_int_time(self.new_t_int_val) # Push int time to spectrometer
+        true_t_int_val = int(self.new_t_int_val * 50) / 50 # Calculate actual integration time, stepped by 20 microseconds
 
-        self.spec.set_time_avg(t_avg_val)
+        self.spec.set_time_avg(self.new_t_avg_val)
 
-        self.update_motor_displays(true_t_int_val, t_avg_val) # Show settings in display boxes
+        self.update_motor_displays(true_t_int_val, self.new_t_avg_val) # Show settings in display boxes
+
+        self.t_int_val = self.new_t_int_val
+        self.t_avg_val = self.new_t_avg_val
 
     def update_motor_displays(self, t_int: float, t_avg: int):
         self.int_time_show_box.config(state="normal")
@@ -378,33 +449,65 @@ class ControlPanel(tk.Tk):
         self.time_avg_show_box.insert(0, str(t_avg))
         self.time_avg_show_box.config(state="readonly")
 
+    def measure_baseline(self):
+        if self.spec is not None:
+            self.spec.measure_baseline()
+        else:
+            messagebox.showerror("Error", "Cannot measure baseline, spectrometer is not connected.")
+        return
+
     def measure_spectrum_click(self):
-        if not self.live_view_active:
-            self.spec.measure()
-        else:
+        if self.live_view_active:
             self.toggle_live_view()
 
-        self.spec.plot_spectrum()
-        self.cur_spectrum = self.spec.spectrum
+        if self.spectrometer_busy:
+            return  # ignore clicks while a measurement is already in progress
 
-    def measure_reference_spectrum_click(self):
-        if not self.live_view_active:
-            self.spec.measure()
-        else:
-            self.toggle_live_view()
+        self.spectrometer_busy = True
+        self.toggle_spectrometer_buttons()
 
-        self.ref_spectrum = self.spec.spectrum
-        self.weak_signal_mask = (self.ref_spectrum < WEAK_SIGNAL_CUTOFF)
+        def worker():
+            try:
+                self.spec.measure()
+                self.cur_spectrum = self.spec.spectrum
+                self.ref_spectrum = self.spec.spectrum
+                self.weak_signal_mask = (self.ref_spectrum < WEAK_SIGNAL_CUTOFF)
+                self.after(0, self.spec.plot_spectrum)
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Error", f"Measurement failed:\n{e}"))
+            finally:
+                self.spectrometer_busy = False
+                self.after(0, self.toggle_spectrometer_buttons)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def measure_absorbance_spectrum_click(self):
-        if not self.live_view_active:
-            self.spec.measure()
-        else:
+        if self.ref_spectrum is None:
+            messagebox.showwarning("No reference", "Please measure a reference spectrum first.")
+            return
+
+        if self.live_view_active:
             self.toggle_live_view()
 
-        self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
-        self.cur_spectrum = self.absor_spectrum
-        self.plot_absorbance_spectrum()
+        if self.spectrometer_busy:
+            return
+
+        self.spectrometer_busy = True
+        self.toggle_spectrometer_buttons()
+
+        def worker():
+            try:
+                self.spec.measure()
+                self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
+                self.cur_spectrum = self.absor_spectrum
+                self.after(0, self.plot_absorbance_spectrum)
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Error", f"Measurement failed:\n{e}"))
+            finally:
+                self.spectrometer_busy = False
+                self.after(0, self.toggle_spectrometer_buttons)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def set_cd_settings_click(self, event=None):
         try:
@@ -420,6 +523,11 @@ class ControlPanel(tk.Tk):
         
     def measure_cd_spectrum_click(self):
         if self.motor_moving:
+            messagebox.showwarning("Motor busy", "Please wait for the motor to finish moving.")
+            return
+
+        if self.ref_spectrum is None:
+            messagebox.showwarning("No reference", "Please measure a reference spectrum first.")
             return
 
         self.motor_moving = True
@@ -563,6 +671,9 @@ class ControlPanel(tk.Tk):
         ax.set_title(f"Measured Circular Dichroism spectrum", fontsize=14, fontweight="bold", pad=12)
         ax.set_xlabel("Wavelength (nm)", fontsize=11)
         ax.set_ylabel("CD (mdeg)", fontsize=11)
+
+        ylim = np.max([1500, np.max(np.abs(self.cd_spectrum[~self.weak_signal_mask]))])
+        ax.set_ylim([ylim, -ylim])
 
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.spines["top"].set_visible(False)

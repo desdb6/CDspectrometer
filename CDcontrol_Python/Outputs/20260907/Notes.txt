@@ -1,0 +1,12 @@
+CD_spectrum_turning_test_1: reference spectrum
+CD_spectrum_turning_test_2: Turned front collimator about 180 degrees
+CD_spectrum_turning_test_3: Turned both front and back collimator about 180 degrees
+CD_spectrum_turning_test_4: reference spectrum
+CD_spectrum_turning_test_5: Turned only front collimator (not fiber) 180 degrees (but that doesnt change anything right?)
+CD_spectrum_turning_test_6: Turned only front fiber 180 degrees
+CD_spectrum_turning_test_7: reference spectrum
+CD_spectrum_turning_test_8: Turned only front collimator 90 degrees
+CD_spectrum_turning_test_9: Turned only front fiber 90 degrees
+CD_spectrum_turning_test_10: Turned only back collimator 90 degrees
+CD_spectrum_turning_test_11: Turned only back collimator another 90 degrees
+CD_spectrum_turning_test_12: Turned only back collimator another 90 degrees
