@@ -257,7 +257,8 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - 15:30 Clean components
 - 17:00 Realign components
 - 17:30 Write user manual
+- 18:00 More CD measurements
 
 #### Notes
 ##### CD artefacts
-I spent the morning trying and treaking different components of the setup. The spectra I took can be found in the outputs folder for this date. Translation does not seem to make a grerat difference, but the rotation of the collimators seems to show a cosine-like effect on the overall intensity. This is true for **both** collimators, the front and the back. Rotating one of them also flips the CD spectra, but it is not as linear as I would have hoped. I decided to clean all the components to see if this is an improvement but for this the components also need to be realigned.
+I spent the morning trying and treaking different components of the setup. The spectra I took can be found in the outputs folder for this date. Translation does not seem to make a grerat difference, but the rotation of the collimators seems to show a cosine-like effect on the overall intensity. This is true for **both** collimators, the front and the back. Rotating one of them also flips the CD spectra, but it is not as linear as I would have hoped. I decided to clean all the components to see if this is an improvement but for this the components also need to be realigned. IN the end this did not seem to make a huge difference. Frustrating day :(
