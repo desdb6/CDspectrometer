@@ -262,11 +262,14 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 I spent the morning trying and tweaking different components of the setup. The spectra I took can be found in the outputs folder for this date. Translation does not seem to make a great difference, but the rotation of the collimators seems to show a cosine-like effect on the overall intensity. This is true for **both** collimators, the front and the back. Rotating one of them also flips the CD spectra, but it is not as linear as I would have hoped. I decided to clean all the components to see if this is an improvement but for this the components also need to be realigned. In the end this did not seem to make a huge difference. Frustrating day :(
 
 ### Tuesday 08/09/2026
-- 9:00 Design absorption spectroscopy cuvette holder
+- 9:00 Design and print absorption spectroscopy cuvette holder
 - 9:30 Rebuild setup
 - 9:45 Try to recreate CD artefacts
 - 11:00 Call Carlos
 - 11:45 Program CD baseline correction
+- 12:30 Recalibrate CCD
+- 13:30 Absorption measurements
+- 14:45 Print fiber holder
 
 #### Notes
 ##### CD artefacts
