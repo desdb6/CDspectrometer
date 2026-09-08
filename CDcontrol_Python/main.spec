@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('SP_SDK', 'SP_SDK')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

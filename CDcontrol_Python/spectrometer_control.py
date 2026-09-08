@@ -49,7 +49,7 @@ class Spectrometer():
 
         # Darkframe measuring
         self.subtract_dark = False
-        self.baseline = None
+        self.dark_count = None
 
         # Initialise spectrum
         self.spectrum = np.zeros(self.DeviceInfo.nTOTPixelNo-self.DeviceInfo.EffectivePixelIndex)
@@ -122,12 +122,17 @@ class Spectrometer():
         self.spectrum = np.array(DataArray[start:end])
 
         # Optional: Remove dark
-        if self.subtract_dark and self.baseline is not None:
-            self.spectrum = self.spectrum - self.baseline
+        if self.subtract_dark and self.dark_count is not None:
+            self.spectrum = self.spectrum - self.dark_count
 
     def wavelength_calibration(self):
-        wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320]
-        pixel_values = [1786, 1708, 1631, 1504, 1425, 1338, 1248, 1153, 1050, 608]
+        # Calibration using Jasco CD
+        # wavelength_values = [650, 627, 604, 568, 545, 520, 495, 468, 440, 320, 550, 900, 680, 720, 740, 760, 785, 800, 820, 840, 865]
+        # pixel_values = [1786, 1708, 1631, 1504, 1425, 1338, 1248, 1153, 1050, 608, 1442, 2643, 1892, 2025, 2096, 2159, 2237, 2293, 2358, 2441, 2504]
+
+        # Calibration using holmium oxide glass absorption
+        wavelength_values = [418.5, 453.4, 459.9, 536.4, 637.5]
+        pixel_values = [989, 1119, 1143, 1423, 1787]
 
         # Fit a cubic polynomial: wavelength as a function of pixel number
         coefficients = np.polyfit(pixel_values, wavelength_values, deg=3)
@@ -223,14 +228,14 @@ class Spectrometer():
         else:
             plt.close()
 
-    def measure_baseline(self):
+    def measure_dark_count(self):
         """Make a smooth darkframe correction by fitting a third degree polynomial to measured data."""
-        self.baseline = None # Make measurement without baseline
+        self.dark_count = None # Make measurement without dark_count
         self.measure(verbatim=False)
         coefficients = np.polyfit(self.wavelengths, self.spectrum, deg=3)
 
         # Build a wavelength -> darkframe lookup table
-        self.baseline = np.polyval(coefficients, self.wavelengths)
+        self.dark_count = np.polyval(coefficients, self.wavelengths)
 
         self.subtract_dark = True
         
