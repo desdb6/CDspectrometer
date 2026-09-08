@@ -271,6 +271,11 @@ I spent the morning trying and tweaking different components of the setup. The s
 - 13:30 Absorption measurements
 - 14:45 Print fiber holder
 - 15:00 Program CD baseline correction, fix bugs, improve usability
+- 15:30 Recalibration using Holmium oxide glass
+- 16:00 Absorption measurements
+- 16:30 Improve code usability
+- 17:00 CD measurements
+- 17:30 Prepare overnight print
 
 #### Notes
 ##### CD artefacts
