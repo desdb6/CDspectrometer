@@ -270,6 +270,7 @@ I spent the morning trying and tweaking different components of the setup. The s
 - 12:30 Recalibrate CCD
 - 13:30 Absorption measurements
 - 14:45 Print fiber holder
+- 15:00 Program CD baseline correction, fix bugs, improve usability
 
 #### Notes
 ##### CD artefacts
