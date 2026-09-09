@@ -10,3 +10,9 @@ CD_spectrum_turning_test_9: Turned only front fiber 90 degrees
 CD_spectrum_turning_test_10: Turned only back collimator 90 degrees
 CD_spectrum_turning_test_11: Turned only back collimator another 90 degrees
 CD_spectrum_turning_test_12: Turned only back collimator another 90 degrees
+
+CD_back_col_turning_X: always turning the back collimator very slightly
+
+Specturm_back_col_turning: same but not CD
+
+Specturm_back_fiber_turning: turning fiber instead of collimator

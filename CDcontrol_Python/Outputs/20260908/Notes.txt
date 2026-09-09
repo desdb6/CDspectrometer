@@ -1,0 +1,19 @@
+CD_ref_1
+CD_turn_front_col_90: turned front collimator and fiber 90 degrees
+CD_diff_pol: Use a different (broken) polarizer
+CD_turn_front_col_90: turned front collimator and fiber 45 degrees
+
+CD_ref_2
+CD_turn_front_col_90_2: turned front collimator and fiber 90 degrees
+CD_turn_back_col_90_2: turned back collimator and fiber 90 degrees
+CD_turn_front_col_90_bis_2: turned front collimator and fiber another 90 degrees
+CD_turn_back_col_90_bis_2: turned back collimator and fiber another 90 degrees
+CD_turn_back_fiber_2: turned back fiber 90 degrees
+CD_turn_back_fiber_bis_2: turned back fiber another 90 degrees
+CD_move_back_fiber_2: moved back fiber to curve the other way and flipped spectrometer
+
+CD_ref_3: different back fiber
+CD_move_back_fiber_3: moved back fiber to curve the other way and flipped spectrometer
+
+CD_ref_4: different back fiber
+CD_move_back_fiber_4: moved back fiber to curve the other way and flipped spectrometer

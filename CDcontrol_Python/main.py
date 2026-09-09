@@ -17,10 +17,10 @@ from tkinter import messagebox
 from motor_control import K10CR2
 from spectrometer_control import Spectrometer
 
-# Offset angle where the linear polariser and fresnel rhomb axes are aligned to each other. This is calibrated using alignment.py
-OFFSET_FRESNEL_ANGLE = np.mod(-8.6, 360)
+# Offset angle where the linear polarizer and fresnel rhomb axes are aligned to each other. This is calibrated using alignment.py
+OFFSET_FRESNEL_ANGLE = np.mod(107.41 - 90, 360)
 
-# Dict for polarisation angles
+# Dict for polarization angles
 POL_DICT = {"Horizontal": 0, "Vertical": 90, "LHC": 45, "RHC": 315}
 
 # Weak signal cutoff, shades absorption spectra
@@ -30,12 +30,13 @@ class ControlPanel(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("CD Spectrometer Control Panel")
-        self.geometry("1400x750")
+        self.geometry("1400x800")
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Initialise spectra
         self.cur_spectrum = None
         self.ref_spectrum = None
+        self.cd_ref_spectrum = None
 
         # Flags for clickable buttons
         self.motor_buttons_active = True
@@ -44,6 +45,9 @@ class ControlPanel(tk.Tk):
         # Flags for busy components
         self.motor_moving = False
         self.spectrometer_busy = False
+
+        # Flag for dark count
+        self.dark_count_subtracted = False
 
         # Left column: control panels
         self.controls_frame = tk.Frame(self)
@@ -77,6 +81,16 @@ class ControlPanel(tk.Tk):
         self.connect_spec_btn = tk.Button(self.connection_panel, text="Connect Spectrometer", command=self.connect_spectrometer)
         self.connect_spec_btn.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
+        self.status_var = tk.StringVar(value="Ready")
+        self.status_label = tk.Label(
+            self.connection_panel, textvariable=self.status_var,
+            anchor="w", fg="#444444"
+            )
+        self.status_label.grid(row=0, column=2, padx=10, pady=5, sticky="ew")
+
+        # Let the status column absorb extra horizontal space rather than the buttons stretching
+        self.connection_panel.grid_columnconfigure(2, weight=1)
+
         # ------------------------------------------------------------------
         # Motor Control
         # ------------------------------------------------------------------
@@ -100,28 +114,28 @@ class ControlPanel(tk.Tk):
         self.move_motor_button = tk.Button(self.motor_manual_control_panel, text="Move", command=self.move_motor_click)
         self.move_motor_button.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
-        # -- Polarisation sub-panel --
-        self.motor_polarisation_panel = tk.LabelFrame(self.motor_control_panel, text="Polarisation Actions")
-        self.motor_polarisation_panel.grid(row=1, column=0, padx=8, pady=4, sticky="ew")
+        # -- Polarization sub-panel --
+        self.motor_polarization_panel = tk.LabelFrame(self.motor_control_panel, text="Polarization Actions")
+        self.motor_polarization_panel.grid(row=1, column=0, padx=8, pady=4, sticky="ew")
 
-        self.alignment_angle_label = tk.Label(self.motor_polarisation_panel, text="Offset angle (deg):")
+        self.alignment_angle_label = tk.Label(self.motor_polarization_panel, text="Offset angle (deg):")
         self.alignment_angle_label.grid(row=0, column=2, padx=10, pady=5, sticky="w")
 
-        self.alignment_angle_show_box = tk.Entry(self.motor_polarisation_panel, width=8)
+        self.alignment_angle_show_box = tk.Entry(self.motor_polarization_panel, width=8)
         self.alignment_angle_show_box.grid(row=1, column=2, padx=10, pady=5, sticky="ew")
         self.alignment_angle_show_box.insert(0, OFFSET_FRESNEL_ANGLE)
         self.alignment_angle_show_box.config(state="readonly")
 
-        self.hor_pol_button = tk.Button(self.motor_polarisation_panel, text="Horizontal", command=lambda: self.move_motor_polarisation(pol="Horizontal"))
+        self.hor_pol_button = tk.Button(self.motor_polarization_panel, text="Horizontal", command=lambda: self.move_motor_polarization(pol="Horizontal"))
         self.hor_pol_button.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
 
-        self.vert_pol_button = tk.Button(self.motor_polarisation_panel, text="Vertical", command=lambda: self.move_motor_polarisation(pol="Vertical"))
+        self.vert_pol_button = tk.Button(self.motor_polarization_panel, text="Vertical", command=lambda: self.move_motor_polarization(pol="Vertical"))
         self.vert_pol_button.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
-        self.lhc_pol_button = tk.Button(self.motor_polarisation_panel, text="LHC", command=lambda: self.move_motor_polarisation(pol="LHC"))
+        self.lhc_pol_button = tk.Button(self.motor_polarization_panel, text="LHC", command=lambda: self.move_motor_polarization(pol="LHC"))
         self.lhc_pol_button.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
-        self.rhc_pol_button = tk.Button(self.motor_polarisation_panel, text="RHC", command=lambda: self.move_motor_polarisation(pol="RHC"))
+        self.rhc_pol_button = tk.Button(self.motor_polarization_panel, text="RHC", command=lambda: self.move_motor_polarization(pol="RHC"))
         self.rhc_pol_button.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
         # ------------------------------------------------------------------
@@ -169,8 +183,8 @@ class ControlPanel(tk.Tk):
         self.measure_spectrum = tk.Button(self.actions_panel, text="Measure Reference Spectrum", command=self.measure_spectrum_click)
         self.measure_spectrum.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
 
-        self.baseline_btn = tk.Button(self.actions_panel, text="Subtract Baseline", command=self.measure_baseline)
-        self.baseline_btn.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
+        self.dark_count_btn = tk.Button(self.actions_panel, text="Subtract Dark Counts", command=self.measure_dark_count)
+        self.dark_count_btn.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
 
         self.live_view_btn = tk.Button(self.actions_panel, text="Start Live View", command=self.toggle_live_view)
         self.live_view_btn.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
@@ -203,8 +217,11 @@ class ControlPanel(tk.Tk):
         self.cd_cycles_btn = tk.Button(self.cd_panel, text="Set", command=self.set_cd_settings_click)
         self.cd_cycles_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ns")
 
-        self.measure_cd_spectrum = tk.Button(self.cd_panel, text="Measure CD Spectrum", command=self.measure_cd_spectrum_click)
-        self.measure_cd_spectrum.grid(row=1, column=0, padx=8, pady=5, sticky="ew")
+        self.measure_cd_reference_btn = tk.Button(self.cd_panel, text="Measure CD Reference", command=self.measure_cd_reference_click)
+        self.measure_cd_reference_btn.grid(row=1, column=0, padx=8, pady=5, sticky="ew")
+
+        self.measure_cd_spectrum_btn = tk.Button(self.cd_panel, text="Measure CD Spectrum", command=self.measure_cd_spectrum_click)
+        self.measure_cd_spectrum_btn.grid(row=1, column=1, padx=8, pady=5, sticky="ew")
 
         # -- Save sub-panel --
         self.save_panel = tk.LabelFrame(self.spectrometer_panel, text="Save")
@@ -300,17 +317,19 @@ class ControlPanel(tk.Tk):
     def toggle_spectrometer_buttons(self):
         if self.spectrometer_buttons_active:
             self.measure_spectrum.config(state="disabled")
-            self.baseline_btn.config(state="disabled")
+            self.dark_count_btn.config(state="disabled")
             self.live_view_btn.config(state="disabled")
             self.measure_absorbance_spectrum.config(state="disabled")
-            self.measure_cd_spectrum.config(state="disabled")
+            self.measure_cd_spectrum_btn.config(state="disabled")
+            self.measure_cd_reference_btn.config(state="disabled")
             self.spectrometer_buttons_active = False
         elif not self.spectrometer_buttons_active:
             self.measure_spectrum.config(state="normal")
-            self.baseline_btn.config(state="normal")
+            self.dark_count_btn.config(state="normal")
             self.live_view_btn.config(state="normal")
             self.measure_absorbance_spectrum.config(state="normal")
-            self.measure_cd_spectrum.config(state="normal")
+            self.measure_cd_spectrum_btn.config(state="normal")
+            self.measure_cd_reference_btn.config(state="normal")
             self.spectrometer_buttons_active = True
 
     def connect_motor(self):
@@ -320,6 +339,8 @@ class ControlPanel(tk.Tk):
             self.motor = None
             messagebox.showerror("Error", f"Could not connect to motor:\n{e}")
             return
+
+        self.set_status("Succesfully connected motor.")
 
         if not self.motor_buttons_active:
             self.toggle_motor_buttons()
@@ -334,6 +355,8 @@ class ControlPanel(tk.Tk):
 
         if not self.spectrometer_buttons_active:
             self.toggle_spectrometer_buttons()
+
+        self.set_status("Succesfully connected spectrometer.")
 
         # Refresh the live-view plot now that self.spec is populated
         self.ax.clear()
@@ -365,10 +388,12 @@ class ControlPanel(tk.Tk):
 
         def worker():
             try:
+                self.set_status("Homing motor....")
                 self.motor.home()
             finally:
                 self.motor_moving = False
                 self.toggle_motor_buttons()
+                self.set_status("Motor homed")
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -387,14 +412,16 @@ class ControlPanel(tk.Tk):
     
             def worker():
                 try:
+                    self.set_status(f"Moving motor to {position}...")
                     self.motor.move(position, 60000)
                 finally:
                     self.motor_moving = False
                     self.toggle_motor_buttons()
+                    self.set_status(f"Motor moved to {position}")
     
             threading.Thread(target=worker, daemon=True).start()
 
-    def move_motor_polarisation(self, pol: str):
+    def move_motor_polarization(self, pol: str):
         position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT[pol], 360)
 
         if self.motor_moving:
@@ -405,10 +432,12 @@ class ControlPanel(tk.Tk):
 
         def worker():
             try:
+                self.set_status(f"Moving motor to {pol}...")
                 self.motor.move(position, 60000)
             finally:
                 self.motor_moving = False
                 self.toggle_motor_buttons()
+                self.set_status(f"Motor moved to {pol}")
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -425,18 +454,24 @@ class ControlPanel(tk.Tk):
             messagebox.showerror("Error", "Please enter a valid integer for time average.")
             return
 
+        if self.new_t_int_val * self.new_t_avg_val > 1000 and self.live_view_active:
+            proceed = messagebox.askokcancel("Long integration time", f"The expected time per spectrum is large ({self.new_t_int_val*self.new_t_avg_val:.1f}ms) and live view is active. This can cause the program to lag. Do you wish to proceed?.")
+            if not proceed:
+                return
+
         if self.new_t_int_val != self.t_int_val: # Safeguard that the same settings are used for reference and absorbance spectra
             self.ref_spectrum = None
         
         self.spec.set_int_time(self.new_t_int_val) # Push int time to spectrometer
         true_t_int_val = int(self.new_t_int_val * 50) / 50 # Calculate actual integration time, stepped by 20 microseconds
-
         self.spec.set_time_avg(self.new_t_avg_val)
 
         self.update_motor_displays(true_t_int_val, self.new_t_avg_val) # Show settings in display boxes
 
         self.t_int_val = self.new_t_int_val
         self.t_avg_val = self.new_t_avg_val
+
+        self.set_status(f"Pushed settings to spectrometer.")
 
     def update_motor_displays(self, t_int: float, t_avg: int):
         self.int_time_show_box.config(state="normal")
@@ -449,14 +484,18 @@ class ControlPanel(tk.Tk):
         self.time_avg_show_box.insert(0, str(t_avg))
         self.time_avg_show_box.config(state="readonly")
 
-    def measure_baseline(self):
-        if self.spec is not None:
-            self.spec.measure_baseline()
-        else:
-            messagebox.showerror("Error", "Cannot measure baseline, spectrometer is not connected.")
-        return
+    def measure_dark_count(self):
+        self.spec.measure_dark_count()
+        self.dark_count_subtracted = True
+        self.set_status(f"Dark counts subtracted.")
 
     def measure_spectrum_click(self):
+
+        if self.dark_count_subtracted == False:
+            proceed = messagebox.askokcancel("Dark count not subtracted", "Dark counts have not been subtracted. Do you want to continue?") 
+            if not proceed:
+                return
+
         if self.live_view_active:
             self.toggle_live_view()
 
@@ -468,6 +507,7 @@ class ControlPanel(tk.Tk):
 
         def worker():
             try:
+                self.set_status(f"Measuring reference spectrum...")
                 self.spec.measure()
                 self.cur_spectrum = self.spec.spectrum
                 self.ref_spectrum = self.spec.spectrum
@@ -478,6 +518,7 @@ class ControlPanel(tk.Tk):
             finally:
                 self.spectrometer_busy = False
                 self.after(0, self.toggle_spectrometer_buttons)
+                self.set_status(f"Referece spectrum measured")
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -485,6 +526,11 @@ class ControlPanel(tk.Tk):
         if self.ref_spectrum is None:
             messagebox.showwarning("No reference", "Please measure a reference spectrum first.")
             return
+
+        if self.dark_count_subtracted == False:
+            proceed = messagebox.askokcancel("Dark count not subtracted", "Dark counts have not been subtracted. Do you want to continue?") 
+            if not proceed:
+                return
 
         if self.live_view_active:
             self.toggle_live_view()
@@ -497,6 +543,7 @@ class ControlPanel(tk.Tk):
 
         def worker():
             try:
+                self.set_status(f"Measuring absorbance spectrum...")
                 self.spec.measure()
                 self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
                 self.cur_spectrum = self.absor_spectrum
@@ -504,6 +551,7 @@ class ControlPanel(tk.Tk):
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Error", f"Measurement failed:\n{e}"))
             finally:
+                self.set_status(f"Absorbance spectrum measured")
                 self.spectrometer_busy = False
                 self.after(0, self.toggle_spectrometer_buttons)
 
@@ -520,34 +568,91 @@ class ControlPanel(tk.Tk):
         self.cd_cycles_show_box.delete(0, tk.END)
         self.cd_cycles_show_box.insert(0, str(self.cd_cycles))
         self.cd_cycles_show_box.config(state="readonly")
-        
-    def measure_cd_spectrum_click(self):
+        self.set_status(f"Set CD settings")
+
+    def measure_cd_reference_click(self):
         if self.motor_moving:
-            messagebox.showwarning("Motor busy", "Please wait for the motor to finish moving.")
             return
 
-        if self.ref_spectrum is None:
-            messagebox.showwarning("No reference", "Please measure a reference spectrum first.")
+        if self.dark_count_subtracted == False:
+            proceed = messagebox.askokcancel("Dark count not subtracted", "Dark counts have not been subtracted. Do you want to continue?") 
+            if not proceed:
+                return
+
+        if self.live_view_active:
+            self.toggle_live_view()
+
+        self.motor_moving = True
+        self.toggle_motor_buttons()
+        self.toggle_spectrometer_buttons()
+
+        def worker():
+            try:
+                self.set_status("Homing motor before CD scan...")
+                self.motor.home()
+                self.set_status("CD reference scan (LHC)...")
+                position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["LHC"], 360)
+                self.motor.move(position, 60000)
+                self.spec.measure()
+                self.lhc_intensities = self.spec.spectrum
+                self.weak_signal_mask = (self.spec.spectrum < WEAK_SIGNAL_CUTOFF)
+
+                self.set_status("CD reference scan (RHC)...")
+                position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["RHC"], 360)
+                self.motor.move(position, 60000)
+                self.spec.measure()
+                self.rhc_intensities = self.spec.spectrum
+
+                self.cd_ref_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities)
+
+                self.set_status("CD scan complete.")
+                self.after(0, self.plot_cd_reference)
+            except Exception as e:
+                self.set_status(f"CD scan failed: {e}")
+            finally:
+                self.motor_moving = False
+                self.after(0, self.toggle_motor_buttons)
+                self.after(0, self.toggle_spectrometer_buttons)
+                self.cur_spectrum = self.cd_ref_spectrum
+
+        threading.Thread(target=worker, daemon=True).start()
+        
+    def measure_cd_spectrum_click(self):
+        if self.cd_ref_spectrum is None:
+            messagebox.showwarning("No reference", "Please measure a CD reference spectrum first.")
+            return
+
+        if self.dark_count_subtracted == False:
+            proceed = messagebox.askokcancel("Dark count not subtracted", "Dark counts have not been subtracted. Do you want to continue?") 
+            if not proceed:
+                return
+
+        if self.live_view_active:
+            self.toggle_live_view()
+        
+        if self.motor_moving:
             return
 
         self.motor_moving = True
         self.toggle_motor_buttons()
+        self.toggle_spectrometer_buttons()
 
         def worker():
             try:
+                self.set_status("Homing motor before CD scan...")
                 self.motor.home()
-                
+
                 temp_lhc_intensities = np.zeros_like(self.spec.spectrum)
                 temp_rhc_intensities = np.zeros_like(self.spec.spectrum)
-                
-                for _ in range(self.cd_cycles):
-                    # Left handed spectrum
+
+                for i in range(self.cd_cycles):
+                    self.set_status(f"CD scan: cycle {i + 1}/{self.cd_cycles} (LHC)...")
                     position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["LHC"], 360)
                     self.motor.move(position, 60000)
                     self.spec.measure()
                     temp_lhc_intensities = temp_lhc_intensities + self.spec.spectrum
 
-                    # Right handed spectrum
+                    self.set_status(f"CD scan: cycle {i + 1}/{self.cd_cycles} (RHC)...")
                     position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["RHC"], 360)
                     self.motor.move(position, 60000)
                     self.spec.measure()
@@ -556,14 +661,16 @@ class ControlPanel(tk.Tk):
 
                 self.lhc_intensities = temp_lhc_intensities / self.cd_cycles
                 self.rhc_intensities = temp_rhc_intensities / self.cd_cycles
-
-                # CD signal
-                self.cd_spectrum = ellipticity_millideg(self.lhc_intensities, self.rhc_intensities)
+                self.cd_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities) - self.cd_ref_spectrum
 
                 self.after(0, self.plot_cd_spectrum)
+                self.set_status("CD scan complete.")
+            except Exception as e:
+                self.set_status(f"CD scan failed: {e}")
             finally:
                 self.motor_moving = False
                 self.after(0, self.toggle_motor_buttons)
+                self.after(0, self.toggle_spectrometer_buttons)
                 self.cur_spectrum = self.cd_spectrum
 
         threading.Thread(target=worker, daemon=True).start()
@@ -586,7 +693,7 @@ class ControlPanel(tk.Tk):
         self.spec.plot_spectrum(filename, show=False)
 
     def show_max_val_pixel(self):
-            max_pixel = np.argmax(self.spec.spectrum)
+            max_pixel = np.argmax(self.cur_spectrum[1200:])
             messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
 
     def toggle_live_view(self):
@@ -646,6 +753,50 @@ class ControlPanel(tk.Tk):
         else:
             plt.close()
 
+    def plot_cd_reference(self, filename: str = False, show: bool = True):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(self.spec.wavelengths, self.cd_ref_spectrum, color="#2563eb", linewidth=1.2)
+        ax.fill_between(
+            self.spec.wavelengths, 0, 1,
+            where=self.weak_signal_mask,
+            color="#848282ff", alpha=0.5,
+            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
+            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+            )
+
+        if self.spec.broken_wavelength_range is not None:
+            ax.fill_between(
+                self.spec.wavelengths, 0, 1,
+                where=self.spec.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Malfunctioning pixel range',
+                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
+                )
+            ax.legend()
+
+        ax.set_title(f"Measured Circular Dichroism reference", fontsize=14, fontweight="bold", pad=12)
+        ax.set_xlabel("Wavelength (nm)", fontsize=11)
+        ax.set_ylabel("CD (absorbance)", fontsize=11)
+
+        ylim = np.max([0.04, np.max(np.abs(self.cd_ref_spectrum[~self.weak_signal_mask]))])
+        ax.set_ylim([-ylim, ylim])
+
+        ax.grid(True, linestyle="--", alpha=0.4)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        ax.margins(x=0.01)
+        fig.tight_layout()
+
+        if filename:
+            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+
+        if show:
+            plt.show()
+        else:
+            plt.close()
+
     def plot_cd_spectrum(self, filename: str = False, show: bool = True):
         fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -670,10 +821,10 @@ class ControlPanel(tk.Tk):
 
         ax.set_title(f"Measured Circular Dichroism spectrum", fontsize=14, fontweight="bold", pad=12)
         ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("CD (mdeg)", fontsize=11)
+        ax.set_ylabel("CD (absorbance)", fontsize=11)
 
-        ylim = np.max([1500, np.max(np.abs(self.cd_spectrum[~self.weak_signal_mask]))])
-        ax.set_ylim([ylim, -ylim])
+        ylim = np.max([0.04, np.max(np.abs(self.cd_spectrum[~self.weak_signal_mask]))])
+        ax.set_ylim([-ylim, ylim])
 
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.spines["top"].set_visible(False)
@@ -723,6 +874,10 @@ class ControlPanel(tk.Tk):
             plt.show()
         else:
             plt.close()
+
+    def set_status(self, text: str):
+        """Thread-safe status update — always routes through the Tk main loop."""
+        self.after(0, lambda: self.status_var.set(text))
 
 def absorbance(intensity_0: float, intensity: float):
     """Calculate absorbance"""

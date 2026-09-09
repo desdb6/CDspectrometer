@@ -232,7 +232,6 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - There is a oscillating signal which looks to be linear with the frequency (also present without fresnel rhomb). My theory is that the beam is diffracting at the polarizer in a different way if the polarizer is horizontal and vertical, but I still need to test this.
 - Fabry perot etalon somewhere
 
-
 ##### To Do for next week
 - Clean the polarizer
 - Figure out the CD artefacts
@@ -242,3 +241,45 @@ Even without a sample, we get a significant CD signal. This could be cause by a 
 - Design adjustable collimator holders
 - Design smaller cuvette holder
 - Make parts for UV-Vis absorption modular setup
+
+### Monday 07/09/2026
+- 9:00 Print front collimator holder
+- 9:30 Test misalignments and figure out CD artefacts
+- 10:30 Design and print fiber holder
+- 11:00 Make code more user friendly
+- 11:30 Rebuild setup
+- 12:00 Turning collimator experiment
+- 12:30 Print collimator holder
+- 13:00 Make code more user friendly and make executable
+- 15:00 Print fiber holder
+- 15:30 Clean components
+- 17:00 Realign components
+- 17:30 Write user manual
+- 18:00 More CD measurements
+
+#### Notes
+##### CD artefacts
+I spent the morning trying and tweaking different components of the setup. The spectra I took can be found in the outputs folder for this date. Translation does not seem to make a great difference, but the rotation of the collimators seems to show a cosine-like effect on the overall intensity. This is true for **both** collimators, the front and the back. Rotating one of them also flips the CD spectra, but it is not as linear as I would have hoped. I decided to clean all the components to see if this is an improvement but for this the components also need to be realigned. In the end this did not seem to make a huge difference. Frustrating day :(
+
+### Tuesday 08/09/2026
+- 9:00 Design and print absorption spectroscopy cuvette holder
+- 9:30 Rebuild setup
+- 9:45 Try to recreate CD artefacts
+- 11:00 Call Carlos
+- 11:45 Program CD baseline correction
+- 12:30 Recalibrate CCD
+- 13:30 Absorption measurements
+- 14:45 Print fiber holder
+- 15:00 Program CD baseline correction, fix bugs, improve usability
+- 15:30 Recalibration using Holmium oxide glass
+- 16:00 Absorption measurements
+- 16:30 Improve code usability
+- 17:00 CD measurements
+- 17:30 Prepare overnight print
+
+#### Notes
+##### CD artefacts
+The spectra I took can be found in the outputs folder for this date. My first idea today was to se a different polarizer and move it by hand, but this resulted in the same artefacts with a double peak, confirming the polarizer is not the problem. 
+
+##### Call Carlos
+Carlos said that it is known that the fiber position has a very big influence on the spectrum, and that it is very difficult to stabilize this. He suggests taking baseline measurements and correcting in software. Furthermore, if might be better to work in absorbance units. He also suggested a way to calibrate the CCD using a rare earth metal glass for small absorbance peaks. Finally he said we could be open to use free space light instead of fibers in the future.

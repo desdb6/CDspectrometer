@@ -1,6 +1,5 @@
 """
-Class to draw tkinter gui to control SM440 handheld CCD and K10CR2 Thorlabs motorized mount
-Author: Des De Borger
+Script for aligning the fast axis of the Fresnel Rhomb with the polarisation axis of the linear polariser
 Last modified: 27/08/2026
 """
 
@@ -117,8 +116,8 @@ class ControlPanel(tk.Tk):
         self.show_max_btn = tk.Button(self.spectrometer_panel, text="Display Maximum Value Pixel", command=self.show_max_val_pixel)
         self.show_max_btn.grid(row=3, column=3, padx=5, pady=5)
 
-        self.baseline_btn = tk.Button(self.spectrometer_panel, text="Measure Baseline", command=self.spec.measure_baseline)
-        self.baseline_btn.grid(row=4, column=0, padx=10, pady=5)
+        self.dark_count_btn = tk.Button(self.spectrometer_panel, text="Measure dark_count", command=self.spec.measure_dark_count)
+        self.dark_count_btn.grid(row=4, column=0, padx=10, pady=5)
 
         # Live Spectrometer View
         self.live_view_active = False
@@ -303,14 +302,22 @@ if __name__ == "__main__":
 
     app.motor.home()
 
-    angles = np.linspace(81, 82, 101)
+    angles = np.linspace(107.25, 107.75, 201)
 
-    with open('Outputs/fast_axis_calibration_very_fine.csv', 'w', newline='') as csvfile:
+    with open('Outputs/fast_axis_calibration2_very_fine.csv', 'w', newline='') as csvfile:
         fieldnames = ['Angle', 'Area under curve']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
+        intensities = []
         for angle in angles:
             app.motor.move(angle, 60000)
             app.spec.measure()
             app.compute_area(app.spec.wavelengths, app.spec.spectrum)
             writer.writerow({'Angle': float(angle), 'Area under curve': float(app.area)})
+            intensities.append(app.area)
+            
+            min_index = intensities.index(min(intensities))
+    min_angle = angles[min_index]
+
+    print(f"Minimum intensity: {intensities[min_index]}")
+    print(f"Angle at minimum intensity: {min_angle}")
