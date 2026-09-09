@@ -6,6 +6,7 @@ Last modified: 27/08/2026
 
 import threading
 import os
+import csv
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ from tkinter import messagebox
 
 from motor_control import K10CR2
 from spectrometer_control import Spectrometer
+from utils import *
 
 # Offset angle where the linear polarizer and fresnel rhomb axes are aligned to each other. This is calibrated using alignment.py
 OFFSET_FRESNEL_ANGLE = np.mod(107.41 - 90, 360)
@@ -30,13 +32,28 @@ class ControlPanel(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("CD Spectrometer Control Panel")
-        self.geometry("1400x800")
+        self.geometry("1400x850")
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Initialise spectra
         self.cur_spectrum = None
-        self.ref_spectrum = None
+
+        self.ref_spectrum = None # Absorbance spectroscopy
+        self.sample_spectrum = None
+        self.abs_spectrum = None
+
+        self.ref_lhc_intensities = None # CD spectroscopy
+        self.ref_rhc_intensities = None
+        self.lhc_intensities = None
+        self.rhc_intensities = None
         self.cd_ref_spectrum = None
+        self.cd_spectrum = None
+        self.cd_spectrum_millideg = None
+        self.avg_abs_spectrum = None
+        self.g_factor = None
+
+        # Flag for current spectrum kind
+        self.cur_spectrum_kind = None
 
         # Flags for clickable buttons
         self.motor_buttons_active = True
@@ -73,7 +90,7 @@ class ControlPanel(tk.Tk):
         # Connect Devices
         # ------------------------------------------------------------------
         self.connection_panel = tk.LabelFrame(self.controls_frame, text="Connect Devices")
-        self.connection_panel.pack(padx=10, pady=10, fill="both")
+        self.connection_panel.pack(padx=10, pady=5, fill="both")
 
         self.connect_motor_btn = tk.Button(self.connection_panel, text="Connect Motor", command=self.connect_motor)
         self.connect_motor_btn.grid(row=0, column=0, padx=10, pady=5, sticky="ew")
@@ -95,7 +112,7 @@ class ControlPanel(tk.Tk):
         # Motor Control
         # ------------------------------------------------------------------
         self.motor_control_panel = tk.LabelFrame(self.controls_frame, text="K10CR2 Motorized Mount Control")
-        self.motor_control_panel.pack(padx=10, pady=10, fill="both")
+        self.motor_control_panel.pack(padx=10, pady=5, fill="both")
 
         # -- Manual Control sub-panel --
         self.motor_manual_control_panel = tk.LabelFrame(self.motor_control_panel, text="Manual Control Actions")
@@ -145,7 +162,7 @@ class ControlPanel(tk.Tk):
         self.t_avg_val = 1
 
         self.spectrometer_panel = tk.LabelFrame(self.controls_frame, text="SM440 Handheld CCD Control")
-        self.spectrometer_panel.pack(padx=10, pady=10, fill="both")
+        self.spectrometer_panel.pack(padx=10, pady=5, fill="both")
 
         # -- Settings sub-panel --
         self.settings_panel = tk.LabelFrame(self.spectrometer_panel, text="Settings")
@@ -208,7 +225,7 @@ class ControlPanel(tk.Tk):
 
         self.cd_cycles_entry = tk.Entry(self.cd_panel)
         self.cd_cycles_entry.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
-        self.cd_cycles_entry.insert(0, "3")
+        self.cd_cycles_entry.insert(0, "1")
         self.cd_cycles_entry.bind("<Return>", self.set_cd_settings_click)
 
         self.cd_cycles_show_box = tk.Entry(self.cd_panel, state="readonly", width=8)
@@ -235,10 +252,32 @@ class ControlPanel(tk.Tk):
         self.filename_entry.insert(0, "spectrum")
 
         self.save_spectrum_btn = tk.Button(self.save_panel, text="Save Spectrum Data", command=self.save_data_spectrum_click)
-        self.save_spectrum_btn.grid(row=1, column=1, padx=8, pady=5, sticky="ew")
+        self.save_spectrum_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ew")
 
-        self.plot_spectrum_btn = tk.Button(self.save_panel, text="Save Spectrum Plot", command=self.save_plot_spectrum_click)
-        self.plot_spectrum_btn.grid(row=1, column=2, padx=8, pady=5, sticky="ew")
+        # -- Plot sub-panel --
+        self.plot_panel = tk.LabelFrame(self.spectrometer_panel, text="Plot")
+        self.plot_panel.grid(row=5, column=0, padx=8, pady=(4, 8), sticky="ew")
+
+        self.plot_ref_btn = tk.Button(self.plot_panel, text="Ref", command=self.save_plot_ref_click)
+        self.plot_ref_btn.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
+
+        self.plot_abs_btn = tk.Button(self.plot_panel, text="Abs", command=self.save_plot_abs_click)
+        self.plot_abs_btn.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
+
+        self.plot_abs_btn = tk.Button(self.plot_panel, text="Avg abs", command=self.save_plot_avg_abs_click)
+        self.plot_abs_btn.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
+
+        self.plot_cd_ref_btn = tk.Button(self.plot_panel, text="CD Ref", command=self.save_plot_cd_ref_click)
+        self.plot_cd_ref_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ew")
+
+        self.plot_cd_btn = tk.Button(self.plot_panel, text="CD", command=self.save_plot_cd_click)
+        self.plot_cd_btn.grid(row=0, column=4, padx=8, pady=5, sticky="ew")
+
+        self.plot_ellipticity_btn = tk.Button(self.plot_panel, text="Ellipticity", command=self.save_plot_ellipticity_click)
+        self.plot_ellipticity_btn.grid(row=0, column=5, padx=8, pady=5, sticky="ew")
+
+        self.plot_g_factor_btn = tk.Button(self.plot_panel, text="g-factor", command=self.save_plot_g_factor_click)
+        self.plot_g_factor_btn.grid(row=0, column=6, padx=8, pady=5, sticky="ew")
 
         # ------------------------------------------------------------------
         # Live Spectrometer View
@@ -296,6 +335,10 @@ class ControlPanel(tk.Tk):
             self.spectrometer_buttons_active = True
             self.toggle_spectrometer_buttons()
 
+    # ------------------------------------------------------------------
+    # Toggle methods
+    # ------------------------------------------------------------------
+
     def toggle_motor_buttons(self):
         if self.motor_buttons_active:
             self.move_motor_button.config(state="disabled")
@@ -331,6 +374,10 @@ class ControlPanel(tk.Tk):
             self.measure_cd_spectrum_btn.config(state="normal")
             self.measure_cd_reference_btn.config(state="normal")
             self.spectrometer_buttons_active = True
+
+    # ------------------------------------------------------------------
+    # Connect methods
+    # ------------------------------------------------------------------
 
     def connect_motor(self):
         try:
@@ -379,6 +426,14 @@ class ControlPanel(tk.Tk):
 
         self.canvas.draw_idle()
 
+    def set_status(self, text: str):
+        """Thread-safe status update — always routes through the Tk main loop."""
+        self.after(0, lambda: self.status_var.set(text))
+
+    # ------------------------------------------------------------------
+    # Motor control methods
+    # ------------------------------------------------------------------
+
     def home_motor_click(self):
         if self.motor_moving:
             return  # ignore clicks while a move is already in progress
@@ -392,7 +447,7 @@ class ControlPanel(tk.Tk):
                 self.motor.home()
             finally:
                 self.motor_moving = False
-                self.toggle_motor_buttons()
+                self.after(0, self.toggle_motor_buttons)
                 self.set_status("Motor homed")
 
         threading.Thread(target=worker, daemon=True).start()
@@ -416,7 +471,7 @@ class ControlPanel(tk.Tk):
                     self.motor.move(position, 60000)
                 finally:
                     self.motor_moving = False
-                    self.toggle_motor_buttons()
+                    self.after(0, self.toggle_motor_buttons)
                     self.set_status(f"Motor moved to {position}")
     
             threading.Thread(target=worker, daemon=True).start()
@@ -436,10 +491,52 @@ class ControlPanel(tk.Tk):
                 self.motor.move(position, 60000)
             finally:
                 self.motor_moving = False
-                self.toggle_motor_buttons()
+                self.after(0, self.toggle_motor_buttons)
                 self.set_status(f"Motor moved to {pol}")
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def update_motor_displays(self, t_int: float, t_avg: int):
+        self.int_time_show_box.config(state="normal")
+        self.int_time_show_box.delete(0, tk.END)
+        self.int_time_show_box.insert(0, str(t_int))
+        self.int_time_show_box.config(state="readonly")
+
+        self.time_avg_show_box.config(state="normal")
+        self.time_avg_show_box.delete(0, tk.END)
+        self.time_avg_show_box.insert(0, str(t_avg))
+        self.time_avg_show_box.config(state="readonly")
+
+    # ------------------------------------------------------------------
+    # Live view methods
+    # ------------------------------------------------------------------
+
+    def toggle_live_view(self):
+        if self.new_t_int_val * self.new_t_avg_val > 1000 and not self.live_view_active:
+            proceed = messagebox.askokcancel(
+                "Long integration time",
+                f"The expected time per spectrum is large ({self.new_t_int_val*self.new_t_avg_val:.1f}ms). "
+                f"This can cause the program to lag when activating live view. Do you wish to proceed?."
+            )
+            if not proceed:
+                return
+            
+        self.live_view_active = not self.live_view_active
+        self.live_view_btn.config(text="Stop Live View" if self.live_view_active else "Start Live View")
+        if self.live_view_active:
+            self.update_live_view()
+
+    def update_live_view(self):
+        if not self.live_view_active:
+            return
+        self.spec.measure(verbatim=False)
+        self.line.set_data(self.spec.wavelengths, self.spec.spectrum)
+        self.canvas.draw_idle()
+        self.after(1, self.update_live_view)  # measure() itself paces this via lIntTime
+
+    # ------------------------------------------------------------------
+    # Spectrometer action panel methods
+    # ------------------------------------------------------------------
 
     def set_spectrometer_settings_click(self, event=None):
         try:
@@ -473,17 +570,6 @@ class ControlPanel(tk.Tk):
 
         self.set_status(f"Pushed settings to spectrometer.")
 
-    def update_motor_displays(self, t_int: float, t_avg: int):
-        self.int_time_show_box.config(state="normal")
-        self.int_time_show_box.delete(0, tk.END)
-        self.int_time_show_box.insert(0, str(t_int))
-        self.int_time_show_box.config(state="readonly")
-
-        self.time_avg_show_box.config(state="normal")
-        self.time_avg_show_box.delete(0, tk.END)
-        self.time_avg_show_box.insert(0, str(t_avg))
-        self.time_avg_show_box.config(state="readonly")
-
     def measure_dark_count(self):
         self.spec.measure_dark_count()
         self.dark_count_subtracted = True
@@ -509,8 +595,9 @@ class ControlPanel(tk.Tk):
             try:
                 self.set_status(f"Measuring reference spectrum...")
                 self.spec.measure()
-                self.cur_spectrum = self.spec.spectrum
-                self.ref_spectrum = self.spec.spectrum
+                self.cur_spectrum = self.spec.spectrum.copy()
+                self.ref_spectrum = self.spec.spectrum.copy()
+                self.cur_spectrum_kind = "Reference"
                 self.weak_signal_mask = (self.ref_spectrum < WEAK_SIGNAL_CUTOFF)
                 self.after(0, self.spec.plot_spectrum)
             except Exception as e:
@@ -521,6 +608,14 @@ class ControlPanel(tk.Tk):
                 self.set_status(f"Referece spectrum measured")
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def show_max_val_pixel(self):
+        max_pixel = np.argmax(self.cur_spectrum)
+        messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+
+    # ------------------------------------------------------------------
+    # Absorbance methods
+    # ------------------------------------------------------------------
 
     def measure_absorbance_spectrum_click(self):
         if self.ref_spectrum is None:
@@ -545,8 +640,10 @@ class ControlPanel(tk.Tk):
             try:
                 self.set_status(f"Measuring absorbance spectrum...")
                 self.spec.measure()
-                self.absor_spectrum = absorbance(self.ref_spectrum, self.spec.spectrum)
-                self.cur_spectrum = self.absor_spectrum
+                self.sample_spectrum = self.spec.spectrum
+                self.abs_spectrum = absorbance(self.ref_spectrum, self.sample_spectrum)
+                self.cur_spectrum = self.abs_spectrum.copy()
+                self.cur_spectrum_kind = "Absorbance"
                 self.after(0, self.plot_absorbance_spectrum)
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("Error", f"Measurement failed:\n{e}"))
@@ -556,6 +653,10 @@ class ControlPanel(tk.Tk):
                 self.after(0, self.toggle_spectrometer_buttons)
 
         threading.Thread(target=worker, daemon=True).start()
+
+    # ------------------------------------------------------------------
+    # CD methods
+    # ------------------------------------------------------------------
 
     def set_cd_settings_click(self, event=None):
         try:
@@ -594,16 +695,18 @@ class ControlPanel(tk.Tk):
                 position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["LHC"], 360)
                 self.motor.move(position, 60000)
                 self.spec.measure()
-                self.lhc_intensities = self.spec.spectrum
+                self.ref_lhc_intensities = self.spec.spectrum.copy()
                 self.weak_signal_mask = (self.spec.spectrum < WEAK_SIGNAL_CUTOFF)
 
                 self.set_status("CD reference scan (RHC)...")
                 position = np.mod(OFFSET_FRESNEL_ANGLE + POL_DICT["RHC"], 360)
                 self.motor.move(position, 60000)
                 self.spec.measure()
-                self.rhc_intensities = self.spec.spectrum
+                self.ref_rhc_intensities = self.spec.spectrum.copy()
 
-                self.cd_ref_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities)
+                self.cd_ref_spectrum = delta_absorbance(self.ref_lhc_intensities, self.ref_rhc_intensities)
+                self.cur_spectrum = self.cd_ref_spectrum.copy()
+                self.cur_spectrum_kind = "CD Reference"
 
                 self.set_status("CD scan complete.")
                 self.after(0, self.plot_cd_reference)
@@ -662,6 +765,22 @@ class ControlPanel(tk.Tk):
                 self.lhc_intensities = temp_lhc_intensities / self.cd_cycles
                 self.rhc_intensities = temp_rhc_intensities / self.cd_cycles
                 self.cd_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities) - self.cd_ref_spectrum
+                self.cd_spectrum_millideg = ellipticity_millideg(self.lhc_intensities, self.rhc_intensities) - ellipticity_millideg(self.ref_lhc_intensities, self.ref_rhc_intensities)
+                self.avg_abs_spectrum = avg_absorbance(
+                    self.lhc_intensities,
+                    self.rhc_intensities,
+                    self.ref_lhc_intensities,
+                    self.ref_rhc_intensities
+                    )
+                self.g_factor = g_factor(
+                    self.lhc_intensities,
+                    self.rhc_intensities,
+                    self.ref_lhc_intensities,
+                    self.ref_rhc_intensities
+                    )
+                
+                self.cur_spectrum = self.cd_spectrum.copy()
+                self.cur_spectrum_kind = "CD"
 
                 self.after(0, self.plot_cd_spectrum)
                 self.set_status("CD scan complete.")
@@ -675,233 +794,277 @@ class ControlPanel(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def save_data_spectrum_click(self):
-        if not self.filename_entry.get().strip():
-                    messagebox.showerror("Error", "Please enter a filename.")
-                    return
-        filename = "Outputs/" + self.filename_entry.get().strip()
-        with open(filename, "w") as file:
-            file.write("Index\tWavelength\tIntensity\n")
-            for j in range(self.spec.DeviceInfo.nRealPixelNo):
-                file.write(f"{j + 1}\t{self.spec.wavelengths[j]}\t{self.cur_spectrum[j]}\n")
+    # ------------------------------------------------------------------
+    # Plotting methods
+    # ------------------------------------------------------------------
 
-    def save_plot_spectrum_click(self):
-        if not self.filename_entry.get().strip():
-            messagebox.showerror("Error", "Please enter a filename.")
-            return
-        filename = "Outputs/" + self.filename_entry.get().strip()
-        self.spec.plot_spectrum(filename, show=False)
+    def _plot_spectrum(
+        self,
+        data,
+        title: str,
+        ylabel: str,
+        include_weak_signal: bool = True,
+        ylim_mode: str = "auto",   # "auto" | "zero_lower" | "symmetric"
+        ylim_max: float = 0.04,
+        filename: str = False,
+        show: bool = True,
+    ):
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-    def show_max_val_pixel(self):
-            max_pixel = np.argmax(self.cur_spectrum[1200:])
-            messagebox.showinfo("Max Pixel", f"Maximum intensity at pixel {max_pixel}")
+        ax.plot(self.spec.wavelengths, data, color="#2563eb", linewidth=1.2)
 
-    def toggle_live_view(self):
-        self.live_view_active = not self.live_view_active
-        self.live_view_btn.config(text="Stop Live View" if self.live_view_active else "Start Live View")
-        if self.live_view_active:
-            self.update_live_view()
+        has_legend = False
 
-    def update_live_view(self):
-        if not self.live_view_active:
-            return
-        self.spec.measure(verbatim=False)
-        self.line.set_data(self.spec.wavelengths, self.spec.spectrum)
-        self.canvas.draw_idle()
-        self.after(1, self.update_live_view)  # measure() itself paces this via lIntTime
+        if include_weak_signal:
+            ax.fill_between(
+                self.spec.wavelengths, 0, 1,
+                where=self.weak_signal_mask,
+                color="#848282ff", alpha=0.5,
+                label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
+                transform=ax.get_xaxis_transform()
+            )
+            has_legend = True
+
+        if self.spec.broken_wavelength_range is not None:
+            ax.fill_between(
+                self.spec.wavelengths, 0, 1,
+                where=self.spec.broken_wavelength_mask,
+                color="#ff3838", alpha=0.5,
+                label='Malfunctioning pixel range',
+                transform=ax.get_xaxis_transform()
+            )
+            has_legend = True
+
+        if has_legend:
+            ax.legend()
+
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=12)
+        ax.set_xlabel("Wavelength (nm)", fontsize=11)
+        ax.set_ylabel(ylabel, fontsize=11)
+
+        if ylim_mode == "zero_lower":
+            ax.set_ybound(lower=0)
+        elif ylim_mode == "symmetric":
+            ylim = np.max([0.04, np.max(np.abs(data[~self.weak_signal_mask]))])
+            ax.set_ylim([-ylim, ylim])
+        # "auto" -> leave matplotlib's default limits
+
+        ax.grid(True, linestyle="--", alpha=0.4)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        ax.margins(x=0.01)
+        fig.tight_layout()
+
+        if filename:
+            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+
+        if show:
+            plt.show()
+        else:
+            plt.close()
 
     def plot_absorbance_spectrum(self, filename: str = False, show: bool = True):
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        ax.plot(self.spec.wavelengths, self.absor_spectrum, color="#2563eb", linewidth=1.2)
-        ax.fill_between(
-            self.spec.wavelengths, 0, 1,
-            where=self.weak_signal_mask,
-            color="#848282ff", alpha=0.5,
-            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
-            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-            )
-
-        if self.spec.broken_wavelength_range is not None:
-            ax.fill_between(
-                self.spec.wavelengths, 0, 1,
-                where=self.spec.broken_wavelength_mask,
-                color="#ff3838", alpha=0.5,
-                label='Malfunctioning pixel range',
-                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-                )
-            ax.legend()
-
-        ax.set_title(f"Measured absorbance spectrum", fontsize=14, fontweight="bold", pad=12)
-        ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("Absorbance", fontsize=11)
-
-        ax.set_ybound(lower=0)
-
-        ax.grid(True, linestyle="--", alpha=0.4)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-        ax.margins(x=0.01)
-        fig.tight_layout()
-
-        if filename:
-            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
-
-        if show:
-            plt.show()
-        else:
-            plt.close()
+        self._plot_spectrum(
+            self.abs_spectrum, "Measured absorbance spectrum", "Absorbance",
+            ylim_mode="zero_lower", ylim_max=2, filename=filename, show=show,
+        )
 
     def plot_cd_reference(self, filename: str = False, show: bool = True):
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        ax.plot(self.spec.wavelengths, self.cd_ref_spectrum, color="#2563eb", linewidth=1.2)
-        ax.fill_between(
-            self.spec.wavelengths, 0, 1,
-            where=self.weak_signal_mask,
-            color="#848282ff", alpha=0.5,
-            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
-            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-            )
-
-        if self.spec.broken_wavelength_range is not None:
-            ax.fill_between(
-                self.spec.wavelengths, 0, 1,
-                where=self.spec.broken_wavelength_mask,
-                color="#ff3838", alpha=0.5,
-                label='Malfunctioning pixel range',
-                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-                )
-            ax.legend()
-
-        ax.set_title(f"Measured Circular Dichroism reference", fontsize=14, fontweight="bold", pad=12)
-        ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("CD (absorbance)", fontsize=11)
-
-        ylim = np.max([0.04, np.max(np.abs(self.cd_ref_spectrum[~self.weak_signal_mask]))])
-        ax.set_ylim([-ylim, ylim])
-
-        ax.grid(True, linestyle="--", alpha=0.4)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-        ax.margins(x=0.01)
-        fig.tight_layout()
-
-        if filename:
-            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
-
-        if show:
-            plt.show()
-        else:
-            plt.close()
+        self._plot_spectrum(
+            self.cd_ref_spectrum, "Measured Circular Dichroism reference", "CD (absorbance)",
+            ylim_mode="symmetric", ylim_max=0.04, filename=filename, show=show,
+        )
 
     def plot_cd_spectrum(self, filename: str = False, show: bool = True):
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        ax.plot(self.spec.wavelengths, self.cd_spectrum, color="#2563eb", linewidth=1.2)
-        ax.fill_between(
-            self.spec.wavelengths, 0, 1,
-            where=self.weak_signal_mask,
-            color="#848282ff", alpha=0.5,
-            label=f'Weak signal range (Counts < {WEAK_SIGNAL_CUTOFF})',
-            transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-            )
-
-        if self.spec.broken_wavelength_range is not None:
-            ax.fill_between(
-                self.spec.wavelengths, 0, 1,
-                where=self.spec.broken_wavelength_mask,
-                color="#ff3838", alpha=0.5,
-                label='Malfunctioning pixel range',
-                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-                )
-            ax.legend()
-
-        ax.set_title(f"Measured Circular Dichroism spectrum", fontsize=14, fontweight="bold", pad=12)
-        ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("CD (absorbance)", fontsize=11)
-
-        ylim = np.max([0.04, np.max(np.abs(self.cd_spectrum[~self.weak_signal_mask]))])
-        ax.set_ylim([-ylim, ylim])
-
-        ax.grid(True, linestyle="--", alpha=0.4)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-        ax.margins(x=0.01)
-        fig.tight_layout()
-
-        if filename:
-            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
-
-        if show:
-            plt.show()
-        else:
-            plt.close()
+        self._plot_spectrum(
+            self.cd_spectrum, "Measured Circular Dichroism spectrum", "CD (absorbance)",
+            ylim_mode="symmetric", ylim_max=0.04, filename=filename, show=show,
+        )
 
     def plot_ellipticity_spectrum(self, filename: str = False, show: bool = True):
-        fig, ax = plt.subplots(figsize=(10, 6))
+        self._plot_spectrum(
+            self.cd_spectrum_millideg, "Measured Ellipticity spectrum", "Ellipticity (mdeg)",
+            ylim_mode="symmetric", ylim_max=1000, filename=filename, show=show,
+        )
 
-        ax.plot(self.spec.wavelengths, self.ellipticity_spectrum, color="#2563eb", linewidth=1.2)
+    def plot_avg_absorbance(self, filename: str = False, show: bool = True):
+        self._plot_spectrum(
+            self.avg_abs_spectrum, "Measured absorbance spectrum", "Absorbance",
+            ylim_mode="zero_lower", ylim_max=2, filename=filename, show=show,
+        )
 
-        if self.spec.broken_wavelength_range is not None:
-            ax.fill_between(
-                self.spec.wavelengths, 0, 1,
-                where=self.spec.broken_wavelength_mask,
-                color="#ff3838", alpha=0.5,
-                label='Malfunctioning pixel range',
-                transform=ax.get_xaxis_transform()  # y in axes-fraction coords, not data coords
-                )
-            ax.legend()
+    def plot_g_factor(self, filename: str = False, show: bool = True):
+        self._plot_spectrum(
+            self.g_factor, "Measured g-factor", "g-factor",
+            ylim_mode="symmetric", ylim_max=0.1, filename=filename, show=show,
+        )
 
-        ax.set_title(f"Measured Ellipticity spectrum", fontsize=14, fontweight="bold", pad=12)
-        ax.set_xlabel("Wavelength (nm)", fontsize=11)
-        ax.set_ylabel("Ellipticity", fontsize=11)
+    # ------------------------------------------------------------------
+    # Saving methods
+    # ------------------------------------------------------------------
 
-        ax.grid(True, linestyle="--", alpha=0.4)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+    def save_data_spectrum_click(self):
+        name = self.filename_entry.get().strip()
+        if not name:
+            messagebox.showerror("Error", "Please enter a filename.")
+            return
 
-        ax.margins(x=0.01)
-        fig.tight_layout()
+        if self.cur_spectrum is None or self.cur_spectrum_kind is None:
+            messagebox.showwarning("Nothing to save", "No spectrum has been measured yet.")
+            return
 
-        if filename:
-            fig.savefig(os.path.join(self.current_dir, filename + ".png"), dpi=200)
+        out_dir = os.path.join(self.current_dir, "Outputs")
+        os.makedirs(out_dir, exist_ok=True)
+        filepath = os.path.join(out_dir, name + ".csv")
 
-        if show:
-            plt.show()
-        else:
-            plt.close()
+        if os.path.exists(filepath):
+            if not messagebox.askyesno("File exists", f"{name}.csv already exists. Overwrite?"):
+                return
 
-    def set_status(self, text: str):
-        """Thread-safe status update — always routes through the Tk main loop."""
-        self.after(0, lambda: self.status_var.set(text))
+        n = self.spec.DeviceInfo.nRealPixelNo
+        wl = self.spec.wavelengths
 
-def absorbance(intensity_0: float, intensity: float):
-    """Calculate absorbance"""
-    return np.log10(intensity_0 / intensity)
+        kind_config = {
+            "Reference": (
+                ["Index", "Wavelength", "Intensity", "Weak signal flag"],
+                lambda j: [j + 1, wl[j], self.cur_spectrum[j], self.weak_signal_mask[j]],
+            ),
+            "Absorbance": (
+                ["Index", "Wavelength", "Reference intensity", "Sample intensity", "Absorbance", "Weak signal flag"],
+                lambda j: [j + 1, wl[j], self.ref_spectrum[j], self.sample_spectrum[j], self.abs_spectrum[j], self.weak_signal_mask[j]],
+            ),
+            "CD Reference": (
+                ["Index", "Wavelength", "LHC intensity", "RHC intensity", "Delta absorbance", "Weak signal flag"],
+                lambda j: [j + 1, wl[j], self.ref_lhc_intensities[j], self.ref_rhc_intensities[j], self.cd_ref_spectrum[j], self.weak_signal_mask[j]],
+            ),
+            "CD": (
+                ["Index", "Wavelength", "LHC reference intensity", "RHC reference intensity",
+                "LHC intensity", "RHC intensity", "Reference delta absorbance", "Delta absorbance",
+                "Ellipticity", "g-factor", "Average absorbace", "Weak signal flag"],
+                lambda j: [
+                    j + 1, wl[j],
+                    self.ref_lhc_intensities[j], self.ref_rhc_intensities[j],
+                    self.lhc_intensities[j], self.rhc_intensities[j],
+                    self.cd_ref_spectrum[j], self.cd_spectrum[j],
+                    self.cd_spectrum_millideg[j], self.g_factor[j], self.avg_abs_spectrum[j], self.weak_signal_mask[j]
+                ],
+            ),
+        }
 
-def molar_absorbance(intensity_0: float, intensity: float, c: float, l: float):
-    """Calculate molar absorbance"""
-    return absorbance(intensity_0, intensity) / (c * l)
+        config = kind_config.get(self.cur_spectrum_kind)
+        if config is None:
+            messagebox.showerror("Error", "Error, spectrum kind not recognized.")
+            return
 
-def delta_absorbance(intensity_l: float, intensity_r: float):
-    """Calculate CD signal expressed as absorbance difference"""
-    return np.log10(intensity_l / intensity_r)
+        header, row_fn = config
+        try:
+            with open(filepath, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(header)
+                for j in range(n):
+                    writer.writerow(row_fn(j))
+            self.set_status(f"Saved data to {name}.csv")
+        except OSError as e:
+            messagebox.showerror("Error", f"Could not save file:\n{e}")
 
-def delta_molar_absorbance(intensity_l: float, intensity_r: float, c: float, l: float):
-    """Calculate CD signal expressed as molar absorbance difference"""
-    return delta_absorbance(intensity_l, intensity_r) / (c * l)
+    def _get_plot_filename(self, suffix: str):
+        """Validate the filename entry and return an 'Outputs/<name><suffix>' path (no extension)."""
+        name = self.filename_entry.get().strip()
+        if not name:
+            messagebox.showerror("Error", "Please enter a filename.")
+            return None
 
-def ellipticity_deg(intensity_l: float, intensity_r: float):
-    """Calculate CD signal expressed as ellipticity"""
-    return delta_absorbance(intensity_l, intensity_r) * np.log(10) * 45 / np.pi
+        out_dir = os.path.join(self.current_dir, "Outputs")
+        os.makedirs(out_dir, exist_ok=True)
+        return os.path.join("Outputs", name + suffix)
 
-def ellipticity_millideg(intensity_l: float, intensity_r: float):
-    """Calculate CD signal expressed as ellipticity in millidegrees"""
-    return 1000 * ellipticity_deg(intensity_l, intensity_r)
+    def save_plot_ref_click(self):
+        if self.ref_spectrum is None:
+            messagebox.showwarning("No data", "Please measure a reference spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_ref")
+        if filename is None:
+            return
+
+        self._plot_spectrum(
+            self.ref_spectrum, "Measured reference spectrum", "Intensity (counts)",
+            ylim_mode="zero_lower", filename=filename, show=True,
+        )
+        self.set_status(f"Saved reference plot to {filename}.png")
+
+    def save_plot_abs_click(self):
+        if self.abs_spectrum is None:
+            messagebox.showwarning("No data", "Please measure an absorbance spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_abs")
+        if filename is None:
+            return
+
+        self.plot_absorbance_spectrum(filename=filename, show=True)
+        self.set_status(f"Saved absorbance plot to {filename}.png")
+
+    def save_plot_avg_abs_click(self):
+        if self.avg_abs_spectrum is None:
+            messagebox.showwarning("No data", "Please measure an absorbance spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_avg_abs")
+        if filename is None:
+            return
+
+        self.plot_avg_absorbance(filename=filename, show=True)
+        self.set_status(f"Saved average absorbance plot to {filename}.png")
+
+    def save_plot_cd_ref_click(self):
+        if self.cd_ref_spectrum is None:
+            messagebox.showwarning("No data", "Please measure a CD reference spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_cd_ref")
+        if filename is None:
+            return
+
+        self.plot_cd_reference(filename=filename, show=True)
+        self.set_status(f"Saved CD reference plot to {filename}.png")
+
+    def save_plot_cd_click(self):
+        if self.cd_spectrum is None:
+            messagebox.showwarning("No data", "Please measure a CD spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_cd")
+        if filename is None:
+            return
+
+        self.plot_cd_spectrum(filename=filename, show=True)
+        self.set_status(f"Saved CD plot to {filename}.png")
+
+    def save_plot_ellipticity_click(self):
+        if self.cd_spectrum_millideg is None:
+            messagebox.showwarning("No data", "Please measure a CD spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_ellipticity")
+        if filename is None:
+            return
+
+        self.plot_ellipticity_spectrum(filename=filename, show=True)
+        self.set_status(f"Saved ellipticity plot to {filename}.png")
+
+    def save_plot_g_factor_click(self):
+        if self.g_factor is None:
+            messagebox.showwarning("No data", "Please measure a CD spectrum first.")
+            return
+
+        filename = self._get_plot_filename("_gfactor")
+        if filename is None:
+            return
+
+        self.plot_g_factor(filename=filename, show=True)
+        self.set_status(f"Saved g-factor plot to {filename}.png")
 
 if __name__ == "__main__":
     app = ControlPanel()
