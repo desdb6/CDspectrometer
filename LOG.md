@@ -274,7 +274,7 @@ I spent the morning trying and tweaking different components of the setup. The s
 - 15:30 Recalibration using Holmium oxide glass
 - 16:00 Absorption measurements
 - 16:30 Improve code usability
-- 17:00 CD measurements
+- 17:00 Helicoid CD measurements
 - 17:30 Prepare overnight print
 
 #### Notes
@@ -283,3 +283,30 @@ The spectra I took can be found in the outputs folder for this date. My first id
 
 ##### Call Carlos
 Carlos said that it is known that the fiber position has a very big influence on the spectrum, and that it is very difficult to stabilize this. He suggests taking baseline measurements and correcting in software. Furthermore, if might be better to work in absorbance units. He also suggested a way to calibrate the CCD using a rare earth metal glass for small absorbance peaks. Finally he said we could be open to use free space light instead of fibers in the future.
+
+### Wednesday 09/09/2026
+- 9:00 Print cuvette holder
+- 9:30 Figure sign flip out
+- 11:00 Print cuvette holder
+- 12:00 Helicoid CD measurements
+- 13:00 Compare to Jasco CD
+- 15:00 Compare data to Huu-Quang
+- 15:30 Reduce noise in setup
+- 17:30 Prepare overnight print
+
+#### Notes
+
+### Thursday 10/09/2026
+- 9:00 (re-)Build absorbance and CD setups
+- 9:30 Print collimator holder
+- 10:00 Make plot buttons better
+- 11:00 Cysteine CD measurements
+- 11:30 Helicoid dilution experiment
+- 12:30 Make group meeting slides
+- 14:00 Absorption dilution experiment
+- 16:00 Group meeting
+- 17:00 Fix absorption baseline issue
+
+#### Notes
+##### Helicoid dilution experiment
+To test the limit of what can be measured I will perform an experiment where I dilute the helicoid samples and see if I can still measure a CD signal. I will do dilutions of 1x, 5x, 25x and 125x. I do this by preparing dilutions by pipetting 30mul of the undiluted helicoids in a cuvette with 120mul of 1mM CTAB. Then I repeat this process 2 more times to make the other dilutions, making sure the sample is homogenous every time. I will take a baseline measurement before each CD measurement.
