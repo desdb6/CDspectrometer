@@ -283,3 +283,22 @@ The spectra I took can be found in the outputs folder for this date. My first id
 
 ##### Call Carlos
 Carlos said that it is known that the fiber position has a very big influence on the spectrum, and that it is very difficult to stabilize this. He suggests taking baseline measurements and correcting in software. Furthermore, if might be better to work in absorbance units. He also suggested a way to calibrate the CCD using a rare earth metal glass for small absorbance peaks. Finally he said we could be open to use free space light instead of fibers in the future.
+
+### Wednesday 09/09/2026
+- 9:00 Print cuvette holder
+- 9:30 Figure sign flip out
+- 11:00 Print cuvette holder
+- 12:00 CD measurements
+- 13:00 Compare to Jasco CD
+- 15:00 Compare data to Huu-Quang
+- 15:30 Reduce noise in setup
+- 17:30 Prepare overnight print
+
+#### Notes
+
+### Thursday 10/09/2026
+- 9:00 (re-)Build absorbance and CD setups
+- 9:30 Print collimator holder
+- 10:00 Make plot buttons better
+
+#### Notes
