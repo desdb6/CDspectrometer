@@ -302,6 +302,10 @@ Carlos said that it is known that the fiber position has a very big influence on
 - 10:00 Make plot buttons better
 - 11:00 Cysteine CD measurements
 - 11:30 Helicoid dilution experiment
+- 12:30 Make group meeting slides
+- 14:00 Absorption dilution experiment
+- 16:00 Group meeting
+- 17:00 Fix absorption baseline issue
 
 #### Notes
 ##### Helicoid dilution experiment
