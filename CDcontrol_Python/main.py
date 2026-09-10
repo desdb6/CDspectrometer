@@ -47,6 +47,7 @@ class ControlPanel(tk.Tk):
         self.lhc_intensities = None
         self.rhc_intensities = None
         self.cd_ref_spectrum = None
+        self.cd_ref_spectrum_mdeg = None
         self.cd_spectrum = None
         self.cd_spectrum_millideg = None
         self.avg_abs_spectrum = None
@@ -240,9 +241,11 @@ class ControlPanel(tk.Tk):
         self.measure_cd_spectrum_btn = tk.Button(self.cd_panel, text="Measure CD Spectrum", command=self.measure_cd_spectrum_click)
         self.measure_cd_spectrum_btn.grid(row=1, column=1, padx=8, pady=5, sticky="ew")
 
-        # -- Save sub-panel --
-        self.save_panel = tk.LabelFrame(self.spectrometer_panel, text="Save")
-        self.save_panel.grid(row=4, column=0, padx=8, pady=(4, 8), sticky="ew")
+        # ------------------------------------------------------------------
+        # Save Panel
+        # ------------------------------------------------------------------
+        self.save_panel = tk.LabelFrame(self.controls_frame, text="Save")
+        self.save_panel.pack(padx=8, pady=(4, 8), fill="both")
 
         self.filename_label = tk.Label(self.save_panel, text="Filename:")
         self.filename_label.grid(row=0, column=0, padx=8, pady=5, sticky="w")
@@ -254,9 +257,11 @@ class ControlPanel(tk.Tk):
         self.save_spectrum_btn = tk.Button(self.save_panel, text="Save Spectrum Data", command=self.save_data_spectrum_click)
         self.save_spectrum_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ew")
 
-        # -- Plot sub-panel --
-        self.plot_panel = tk.LabelFrame(self.spectrometer_panel, text="Plot")
-        self.plot_panel.grid(row=5, column=0, padx=8, pady=(4, 8), sticky="ew")
+        # ------------------------------------------------------------------
+        # Save Panel
+        # ------------------------------------------------------------------
+        self.plot_panel = tk.LabelFrame(self.controls_frame, text="Plot")
+        self.plot_panel.pack(padx=8, pady=(4, 8), fill="both")
 
         self.plot_ref_btn = tk.Button(self.plot_panel, text="Ref", command=self.save_plot_ref_click)
         self.plot_ref_btn.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
@@ -267,17 +272,17 @@ class ControlPanel(tk.Tk):
         self.plot_abs_btn = tk.Button(self.plot_panel, text="Avg abs", command=self.save_plot_avg_abs_click)
         self.plot_abs_btn.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
 
-        self.plot_cd_ref_btn = tk.Button(self.plot_panel, text="CD Ref", command=self.save_plot_cd_ref_click)
+        self.plot_cd_ref_btn = tk.Button(self.plot_panel, text="CD baseline (mdeg)", command=self.save_plot_cd_ref_click)
         self.plot_cd_ref_btn.grid(row=0, column=3, padx=8, pady=5, sticky="ew")
 
-        self.plot_cd_btn = tk.Button(self.plot_panel, text="CD", command=self.save_plot_cd_click)
-        self.plot_cd_btn.grid(row=0, column=4, padx=8, pady=5, sticky="ew")
+        # self.plot_cd_btn = tk.Button(self.plot_panel, text="CD (abs)", command=self.save_plot_cd_click)
+        # self.plot_cd_btn.grid(row=0, column=4, padx=8, pady=5, sticky="ew")
 
-        self.plot_ellipticity_btn = tk.Button(self.plot_panel, text="Ellipticity", command=self.save_plot_ellipticity_click)
-        self.plot_ellipticity_btn.grid(row=0, column=5, padx=8, pady=5, sticky="ew")
+        self.plot_ellipticity_btn = tk.Button(self.plot_panel, text="CD (mdeg)", command=self.save_plot_ellipticity_click)
+        self.plot_ellipticity_btn.grid(row=0, column=4, padx=8, pady=5, sticky="ew")
 
         self.plot_g_factor_btn = tk.Button(self.plot_panel, text="g-factor", command=self.save_plot_g_factor_click)
-        self.plot_g_factor_btn.grid(row=0, column=6, padx=8, pady=5, sticky="ew")
+        self.plot_g_factor_btn.grid(row=0, column=5, padx=8, pady=5, sticky="ew")
 
         # ------------------------------------------------------------------
         # Live Spectrometer View
@@ -705,6 +710,7 @@ class ControlPanel(tk.Tk):
                 self.ref_rhc_intensities = self.spec.spectrum.copy()
 
                 self.cd_ref_spectrum = delta_absorbance(self.ref_lhc_intensities, self.ref_rhc_intensities)
+                self.cd_ref_spectrum_mdeg = ellipticity_millideg(self.ref_lhc_intensities, self.ref_rhc_intensities)
                 self.cur_spectrum = self.cd_ref_spectrum.copy()
                 self.cur_spectrum_kind = "CD Reference"
 
@@ -765,7 +771,7 @@ class ControlPanel(tk.Tk):
                 self.lhc_intensities = temp_lhc_intensities / self.cd_cycles
                 self.rhc_intensities = temp_rhc_intensities / self.cd_cycles
                 self.cd_spectrum = delta_absorbance(self.lhc_intensities, self.rhc_intensities) - self.cd_ref_spectrum
-                self.cd_spectrum_millideg = ellipticity_millideg(self.lhc_intensities, self.rhc_intensities) - ellipticity_millideg(self.ref_lhc_intensities, self.ref_rhc_intensities)
+                self.cd_spectrum_millideg = ellipticity_millideg(self.lhc_intensities, self.rhc_intensities) - self.cd_ref_spectrum_mdeg
                 self.avg_abs_spectrum = avg_absorbance(
                     self.lhc_intensities,
                     self.rhc_intensities,
@@ -872,7 +878,7 @@ class ControlPanel(tk.Tk):
 
     def plot_cd_reference(self, filename: str = False, show: bool = True):
         self._plot_spectrum(
-            self.cd_ref_spectrum, "Measured Circular Dichroism reference", "CD (absorbance)",
+            self.cd_ref_spectrum_mdeg, "Measured Circular Dichroism reference", "CD (mdeg)",
             ylim_mode="symmetric", ylim_max=0.04, filename=filename, show=show,
         )
 
@@ -884,7 +890,7 @@ class ControlPanel(tk.Tk):
 
     def plot_ellipticity_spectrum(self, filename: str = False, show: bool = True):
         self._plot_spectrum(
-            self.cd_spectrum_millideg, "Measured Ellipticity spectrum", "Ellipticity (mdeg)",
+            self.cd_spectrum_millideg, "Measured CD spectrum", "Ellipticity (mdeg)",
             ylim_mode="symmetric", ylim_max=1000, filename=filename, show=show,
         )
 
@@ -935,19 +941,20 @@ class ControlPanel(tk.Tk):
                 lambda j: [j + 1, wl[j], self.ref_spectrum[j], self.sample_spectrum[j], self.abs_spectrum[j], self.weak_signal_mask[j]],
             ),
             "CD Reference": (
-                ["Index", "Wavelength", "LHC intensity", "RHC intensity", "Delta absorbance", "Weak signal flag"],
-                lambda j: [j + 1, wl[j], self.ref_lhc_intensities[j], self.ref_rhc_intensities[j], self.cd_ref_spectrum[j], self.weak_signal_mask[j]],
+                ["Index", "Wavelength", "LHC intensity", "RHC intensity", "Delta absorbance", "Ellipticity", "Weak signal flag"],
+                lambda j: [j + 1, wl[j], self.ref_lhc_intensities[j], self.ref_rhc_intensities[j], self.cd_ref_spectrum[j], self.cd_ref_spectrum_mdeg[j], self.weak_signal_mask[j]],
             ),
             "CD": (
                 ["Index", "Wavelength", "LHC reference intensity", "RHC reference intensity",
-                "LHC intensity", "RHC intensity", "Reference delta absorbance", "Delta absorbance",
+                "LHC intensity", "RHC intensity", "Reference delta absorbance", "Reference ellipticity", "Delta absorbance",
                 "Ellipticity", "g-factor", "Average absorbace", "Weak signal flag"],
                 lambda j: [
                     j + 1, wl[j],
                     self.ref_lhc_intensities[j], self.ref_rhc_intensities[j],
                     self.lhc_intensities[j], self.rhc_intensities[j],
-                    self.cd_ref_spectrum[j], self.cd_spectrum[j],
-                    self.cd_spectrum_millideg[j], self.g_factor[j], self.avg_abs_spectrum[j], self.weak_signal_mask[j]
+                    self.cd_ref_spectrum[j], self.cd_ref_spectrum_mdeg[j], self.cd_spectrum[j],
+                    self.cd_spectrum_millideg[j], self.g_factor[j],
+                    self.avg_abs_spectrum[j], self.weak_signal_mask[j]
                 ],
             ),
         }
