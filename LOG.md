@@ -310,3 +310,10 @@ Carlos said that it is known that the fiber position has a very big influence on
 #### Notes
 ##### Helicoid dilution experiment
 To test the limit of what can be measured I will perform an experiment where I dilute the helicoid samples and see if I can still measure a CD signal. I will do dilutions of 1x, 5x, 25x and 125x. I do this by preparing dilutions by pipetting 30mul of the undiluted helicoids in a cuvette with 120mul of 1mM CTAB. Then I repeat this process 2 more times to make the other dilutions, making sure the sample is homogenous every time. I will take a baseline measurement before each CD measurement.
+
+### Friday 11/09/2026
+- 9:00 Final code changes
+
+#### Notes
+##### Pyinstaller command
+"C:\Users\lguser\AppData\Local\Programs\Python\Python311-32\python.exe" -m PyInstaller --onefile --windowed --icon=cd.ico --add-data "SP_SDK;SP_SDK" main.py
