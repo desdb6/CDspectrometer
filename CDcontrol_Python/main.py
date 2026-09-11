@@ -263,13 +263,13 @@ class ControlPanel(tk.Tk):
         self.plot_panel = tk.LabelFrame(self.controls_frame, text="Plot")
         self.plot_panel.pack(padx=8, pady=(4, 8), fill="both")
 
-        self.plot_ref_btn = tk.Button(self.plot_panel, text="Ref", command=self.save_plot_ref_click)
+        self.plot_ref_btn = tk.Button(self.plot_panel, text="Ref.", command=self.save_plot_ref_click)
         self.plot_ref_btn.grid(row=0, column=0, padx=8, pady=5, sticky="ew")
 
-        self.plot_abs_btn = tk.Button(self.plot_panel, text="Abs", command=self.save_plot_abs_click)
+        self.plot_abs_btn = tk.Button(self.plot_panel, text="Abs.", command=self.save_plot_abs_click)
         self.plot_abs_btn.grid(row=0, column=1, padx=8, pady=5, sticky="ew")
 
-        self.plot_abs_btn = tk.Button(self.plot_panel, text="Avg abs", command=self.save_plot_avg_abs_click)
+        self.plot_abs_btn = tk.Button(self.plot_panel, text="CD Abs.", command=self.save_plot_avg_abs_click)
         self.plot_abs_btn.grid(row=0, column=2, padx=8, pady=5, sticky="ew")
 
         self.plot_cd_ref_btn = tk.Button(self.plot_panel, text="CD baseline (mdeg)", command=self.save_plot_cd_ref_click)
@@ -685,6 +685,11 @@ class ControlPanel(tk.Tk):
             if not proceed:
                 return
 
+        if self.new_t_int_val * self.new_t_avg_val > 50 * 500:
+            proceed = messagebox.askokcancel("Long CD measurement", f"This measurement will take some time (>{self.new_t_int_val * self.new_t_avg_val / 1000 :.1f}s) and cannot be cancelled. Do you want to continue?")
+            if not proceed:
+                return
+
         if self.live_view_active:
             self.toggle_live_view()
 
@@ -733,6 +738,11 @@ class ControlPanel(tk.Tk):
 
         if self.dark_count_subtracted == False:
             proceed = messagebox.askokcancel("Dark count not subtracted", "Dark counts have not been subtracted. Do you want to continue?") 
+            if not proceed:
+                return
+
+        if self.new_t_int_val * self.new_t_avg_val * self.cd_cycles > 50 * 1500:
+            proceed = messagebox.askokcancel("Long CD measurement", f"This measurement will take some time (>{self.new_t_int_val * self.new_t_avg_val * self.cd_cycles / 1000 :.1f}s) and cannot be cancelled. Do you want to continue?")
             if not proceed:
                 return
 
@@ -890,7 +900,7 @@ class ControlPanel(tk.Tk):
 
     def plot_ellipticity_spectrum(self, filename: str = False, show: bool = True):
         self._plot_spectrum(
-            self.cd_spectrum_millideg, "Measured CD spectrum", "Ellipticity (mdeg)",
+            self.cd_spectrum_millideg, "Measured CD spectrum", "CD (mdeg)",
             ylim_mode="symmetric", ylim_max=1000, filename=filename, show=show,
         )
 
@@ -941,13 +951,12 @@ class ControlPanel(tk.Tk):
                 lambda j: [j + 1, wl[j], self.ref_spectrum[j], self.sample_spectrum[j], self.abs_spectrum[j], self.weak_signal_mask[j]],
             ),
             "CD Reference": (
-                ["Index", "Wavelength", "LHC intensity", "RHC intensity", "Delta absorbance", "Ellipticity", "Weak signal flag"],
+                ["Index", "Wavelength", "LHC intensity", "RHC intensity", "CD (delta absorbance)", "CD (ellipticity)", "Weak signal flag"],
                 lambda j: [j + 1, wl[j], self.ref_lhc_intensities[j], self.ref_rhc_intensities[j], self.cd_ref_spectrum[j], self.cd_ref_spectrum_mdeg[j], self.weak_signal_mask[j]],
             ),
             "CD": (
                 ["Index", "Wavelength", "LHC reference intensity", "RHC reference intensity",
-                "LHC intensity", "RHC intensity", "Reference delta absorbance", "Reference ellipticity", "Delta absorbance",
-                "Ellipticity", "g-factor", "Average absorbace", "Weak signal flag"],
+                "LHC intensity", "RHC intensity", "Reference CD (delta absorbance)", "Reference CD (ellipticity)", "CD (delta absorbance)", "CD (ellipticity)", "g-factor", "Absorbace", "Weak signal flag"],
                 lambda j: [
                     j + 1, wl[j],
                     self.ref_lhc_intensities[j], self.ref_rhc_intensities[j],

@@ -10,9 +10,9 @@ import matplotlib.transforms as transforms
 
 from utils import *
 
-data_1x = get_data_from_txt_abs(r"Outputs\20260910\Nanodots_dilution\1x.csv")
-data_10x = get_data_from_txt_abs(r"Outputs\20260910\Nanodots_dilution\10x.csv")
-data_100x = get_data_from_txt_abs(r"Outputs\20260910\Nanodots_dilution\100x.csv")
+data_1x = get_data_from_txt_abs(r"Outputs\Des\20260910\Nanodots_dilution\1x.csv")
+data_10x = get_data_from_txt_abs(r"Outputs\Des\20260910\Nanodots_dilution\10x.csv")
+data_100x = get_data_from_txt_abs(r"Outputs\Des\20260910\Nanodots_dilution\100x.csv")
 # data_500x = get_data_from_txt_abs(r"Outputs\20260910\Nanodots_dilution\500x.csv")
 
 data_1x_concentration = au0_concentration(data_1x["Wavelength"], data_1x["Absorbance"])
