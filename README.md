@@ -21,17 +21,13 @@ Rather than competing with the performance of high-end commercial instruments us
 | `Notes/` | Development notes |
 | `LOG.md` | Project development log |
 
-## Getting Started
-
-*(Add build instructions, required components/BOM, and setup steps here.)*
-
 ## Hardware Type
 
 Measuring physical properties and in-lab sensors
 
 ## Keywords
 
-Circular dichroism, Plasmonic chiral nanoparticles, Low-cost spectrometer, Portable instrumentation, Chiroptical spectroscopy
+Chiroptical spectroscopy, Circular dichroism, Plasmonic chiral nanoparticles
 
 ## License
 
