@@ -15,7 +15,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import messagebox
 
-from motor_control import K10CR2
+# from motor_control import K10CR2
 from spectrometer_control import Spectrometer
 from utils import *
 
