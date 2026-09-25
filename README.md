@@ -34,7 +34,6 @@ Chiroptical spectroscopy, Circular dichroism, Plasmonic chiral nanoparticles
 This repository contains hardware designs and software, released under different open licenses:
 
 - **Hardware designs** (`Blender/`, `STL/`) are licensed under [CERN-OHL-S 2.0](https://ohwr.org/cern_ohl_s_v2.txt). See `Blender/LICENSE` and `STL/LICENSE`.
-- **Manuals and documentation** (`Manuals/`) are licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). See `Manuals/LICENSE`.
 - **Software** (`CDcontrol_Python/`, `Spectral_Composition/`) is licensed under the [MIT License](https://opensource.org/licenses/MIT). See `CDcontrol_Python/LICENSE` and `Spectral_Composition/LICENSE`.
 
 ## Citation
